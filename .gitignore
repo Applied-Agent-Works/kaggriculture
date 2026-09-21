@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.ipynb_checkpoints/
+
+# Kaggle credentials / data
+.kaggle/
+kaggle-*.json
+kaggriculture-data/
+
+# Node / Vite / TypeScript (visualizer/default, visualizer/playable)
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+
+# Env / secrets
+.env
+.env.*
