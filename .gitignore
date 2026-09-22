@@ -4,6 +4,8 @@ __pycache__/
 *.egg-info/
 .venv/
 .ipynb_checkpoints/
+memoization-experiment/results/
+memoization-experiment/trace-cache/
 
 # Kaggle credentials / data
 .kaggle/
