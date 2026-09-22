@@ -93,10 +93,11 @@ falsifiable next experiment. It must not choose a live game action, mutate the
 agent, reinterpret game rules, or declare a change successful without matched
 local results.
 
-Optional external evaluators, including TypeSafe Jev, follow the same boundary:
-they are evidence-producing services, never the game-time policy or final
-authority. Do not provision Azure resources, add credentials, call paid models,
-or add external connectors unless the user explicitly asks.
+No external model, evaluator, search, storage, or other service API may be
+used. The project has no supplied keys, tokens, usage allocation, or spending
+budget for external calls. Do not provision Azure resources, add credentials,
+call paid models, or add external connectors. Treat any later exception as a
+new explicit architecture decision that must name the provider and budget.
 
 ## Working conventions
 

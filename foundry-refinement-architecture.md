@@ -324,34 +324,26 @@ refinement pipeline therefore needs explicit safeguards:
 5. Prefer an `inconclusive` result when evidence is thin.
 6. Keep the baseline configuration reproducible and easy to restore.
 
-## 8. Optional TypeSafe Jev role
+## 8. External API and credential boundary
 
-TypeSafe Jev is not required by this architecture. If used, it should be an
-optional external evaluation service, not the gameplay policy and not the sole
-source of a refinement decision.
+The Foundry refinement project must not call external model, evaluator, or
+service APIs. No API keys, access tokens, usage allocation, or spending budget
+are supplied for such services, so an integration cannot safely assume that it
+may make even one billable request.
 
-Its bounded Choice, Score, and probability-style responses could be useful for
-questions such as:
+This rules out direct calls to TypeSafe Jev and any other third-party LLM,
+evaluation, search, storage, or orchestration API. It also rules out silently
+adding credentials, asking an operator to supply a key as part of ordinary
+operation, or falling back to an external service when a Foundry capability is
+unavailable.
 
-- whether a decision trace contains enough evidence to support its claimed
-  expected-utility estimate;
-- which predefined failure category best describes a run;
-- whether a Foundry-generated explanation cites the supplied evidence rather
-  than an invented cause;
-- whether an evaluation case should be marked `clear`, `ambiguous`, or
-  `needs human review`.
+If the project later receives explicit authorization, credentials, and a cost
+budget for a named provider, that is a new architecture decision. It must be
+documented and reviewed before any adapter, connector, or request is added.
 
-If introduced, the Jev adapter should:
-
-- be feature-flagged and fail closed to “no external assessment”;
-- log provider, model version, exact typed question, bounded state payload,
-  response, confidence/probabilities, latency, and cost;
-- avoid sending credentials, private data, or unnecessary raw replay text;
-- be compared against a Foundry-hosted evaluator on a frozen case set;
-- have no authority to edit code, approve a refinement, or act during a game.
-
-This keeps the design Foundry-centered while allowing a future controlled
-comparison of specialized evaluators.
+Until then, the only permitted refinement inputs are local, reproducible
+experiment artifacts and capabilities explicitly approved and provided within
+the Foundry project itself.
 
 ## 9. Foundry implementation posture
 
@@ -401,11 +393,12 @@ This establishes the scientific control loop before automating commentary.
 4. Run candidates locally; do not allow automatic policy edits.
 5. Measure whether Foundry recommendations predict useful improvements.
 
-### Stage D — Optional evaluator comparison
+### Stage D — Foundry-only evaluator assessment
 
-1. Add a Foundry-native evaluator and, if desired, an optional Jev adapter.
-2. Compare their classifications/calibration on a frozen decision-trace set.
-3. Keep only the integration that earns its added complexity and cost.
+1. Add an approved Foundry-native evaluator only when the project supplies the
+   required capability, identity, and cost authorization.
+2. Evaluate it on a frozen decision-trace set.
+3. Keep it only if it improves the documented refinement workflow.
 
 ## 11. Open decisions
 
@@ -424,8 +417,6 @@ project:
    replay traces ever necessary?
 6. What human review record is sufficient to accept a refinement into the
    baseline agent?
-7. Does an optional external evaluator such as Jev add measured value beyond a
-   Foundry-hosted evaluator?
 
 ## 12. Architectural invariants
 
@@ -441,6 +432,9 @@ The following rules should survive later implementation details:
    inconclusive.
 7. Human review chooses which recommendations enter the local experiment loop.
 8. Every retained refinement carries its experiment provenance and rationale.
+9. No external API, connector, credential, token, or billable model call may
+   be introduced without explicit user authorization, a named provider, and a
+   documented usage/cost budget.
 
 Following these invariants lets the Foundry project make the Kaggriculture
 agent more teachable and evidence-driven without turning it into an opaque
