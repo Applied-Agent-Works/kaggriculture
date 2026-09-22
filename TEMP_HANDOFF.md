@@ -84,3 +84,26 @@ Then create the new root `main.py`, run an import/syntax check, and inspect
 One known limitation to study: the carrot agent can scale planting beyond one
 farmer's ability to water all carrot tiles. Care-feasibility planning is
 deliberately not yet modeled.
+
+#Prompt
+
+Work in /home/experiments/frontier-week/foundry-trainer.
+
+First, read HANDOFF/README.md and HANDOFF/SOURCE_INVENTORY.md in full. Then inspect the included fixture at HANDOFF/memoization-experiment/, plus the authoritative Kaggriculture documents and source referenced by the handoff.
+
+Your task is to turn this handoff into a clean, local-only evaluation project for hypertuning Kaggriculture’s explicit carrot-policy parameters. Kaggriculture is the system under test; do not modify its policy, game rules, submission entry point, or agent architecture.
+
+The immediate implementation goal is checkpoint/resume incremental counterfactual regression:
+
+Run and record a fixed baseline suite against one deterministic opponent, across a small fixed seed-and-seat suite.
+Preserve enough state to restore the simulator immediately before each decision (or use a documented checkpoint interval).
+Replay a candidate policy against recorded observations until its first action divergence.
+Reuse the baseline result exactly when there is no divergence; otherwise restore the pre-divergence state and simulate the remaining suffix forward.
+Validate results against clean full reruns for no divergence, deliberately late divergence, and early divergence.
+Before implementing, inspect the copied profile_step8.py carefully: it currently records and replays decision traces, but it does not checkpoint or restore simulator state, and its imports still assume the Kaggriculture repository layout. Create an explicit, documented target-project binding—never rely on the current directory or a generic agents module.
+
+Preserve provenance for copied material, keep generated caches/results disposable and ignored, and record source revisions, configuration, opponent, seeds, seats, candidate parameter old/new values, divergence turns, suffix lengths, outcomes, and audit status.
+
+Constraints: no Azure provisioning, external APIs, credentials, connectors, cloud storage, LLM calls, or automatic policy mutation. A human applies policy changes; local matched evidence determines whether they are supported. Keep full clean-suite audits alongside the fast cached loop.
+
+Start by reporting the proposed project layout and validation plan. Then implement the smallest end-to-end checkpoint/resume proof. Do not expand into candidate search or Foundry-hosted agents until that proof is demonstrated.
