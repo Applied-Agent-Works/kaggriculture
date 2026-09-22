@@ -17,7 +17,7 @@ Then try a short practice game between two built-in random players:
 When you have written your own agent in main.py, play it against the built-in
 random player for a complete 30-day season (720 turns):
 
-    ./run_match.py --agent main.py --opponent random --steps 720
+    ./run_match.py --agent main.py --opponent random --steps 720 --seed 42
 
 """
 
@@ -65,13 +65,26 @@ def main() -> None:
         help="Turns to play; use 720 for a full 30-day season (default: 24).",
     )
 
+    # A fixed seed makes the game's random shop draws and weed spawning
+    # repeatable.  It is essential when comparing one policy parameter at a
+    # time.  Omitting it preserves the environment's normal random behavior.
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=None,
+        help="Optional deterministic episode seed for reproducible comparisons.",
+    )
+
     # Turn the command-line text into Python values.  For example,
     # "--steps 720" becomes args.steps == 720.
     args = parser.parse_args()
 
     # Build a new Kaggriculture game.  "debug=True" asks the simulator to
     # expose useful errors while developing instead of hiding them.
-    env = make("kaggriculture", configuration={"episodeSteps": args.steps}, debug=True)
+    configuration = {"episodeSteps": args.steps}
+    if args.seed is not None:
+        configuration["seed"] = args.seed
+    env = make("kaggriculture", configuration=configuration, debug=True)
 
     # Run the game.  The list is in player order: the first agent is player 0
     # and the second is player 1.  On each turn, the simulator calls each
@@ -81,7 +94,8 @@ def main() -> None:
     # env.steps contains the complete turn-by-turn history.  The final entry
     # is the state after the last turn, so it holds the final result for both
     # players.
-    print(f"Played {args.steps} turns: {args.agent} vs {args.opponent}")
+    seed_label = env.info.get("seed", "random")
+    print(f"Played {args.steps} turns (seed {seed_label}): {args.agent} vs {args.opponent}")
     for player, state in enumerate(env.steps[-1]):
         # "reward" is the final score in this game (normally the coins in the
         # bank), and "status" confirms whether the agent finished normally.

@@ -249,6 +249,41 @@ flowchart TD
     Compare -->|No| Wait[Keep tile available]
 ```
 
+### 10.1 `PASS` is the baseline alternative
+
+The agent does not need an artificial minimum-profit threshold in this first
+network. It compares planting with a real game action: `PASS`.
+
+$$
+U(\operatorname{PASS}) = 0
+$$
+
+$$
+\operatorname{Choose\ PLANT\ CARROT}
+\quad\text{if and only if}\quad
+U(\operatorname{PLANT\ CARROT}) > U(\operatorname{PASS})
+$$
+
+When their utilities are equal, this first agent chooses `PASS`. A later
+network may assign `PASS` a nonzero option value for keeping a tile and future
+actions available; that is intentionally out of scope for now.
+
+### 10.2 Two accounting boundaries
+
+There are two valid ways to account for the 20-coin carrot seed cost. We must
+not charge it twice.
+
+| Decision being evaluated | Cost included now |
+|---|---:|
+| `BUY_SEED` followed by `PLANT CARROT` | 20 coins |
+| `PLANT CARROT` when the seed is already owned | 0 immediate coins; use the seed's opportunity/replacement value if needed |
+
+The framework uses a 20-coin **seed opportunity value** by default. This lets
+the local `PLANT` versus `PASS` choice act as though consuming a carrot seed
+uses an asset that could otherwise be retained for later. The continuous
+carrot-investment calculation charges the actual 20-coin market purchase only
+when it orders a new seed.
+
 ## 11. Explicitly out of scope for now
 
 We will add these only after this network is clear and tested:
@@ -260,3 +295,177 @@ We will add these only after this network is clear and tested:
 - Land purchases and tile-capacity value.
 - Full opponent hidden-shed tracking across many turns.
 - Selling a large carrot batch, where our own sales alter later unit prices.
+
+## 12. Experiment axes: what may change from run to run
+
+The purpose of repeated seeded matches is not to randomly change everything.
+Each experiment changes one explicitly named model parameter while holding the
+game seed, opponent, and all other parameters fixed.
+
+### 12.1 Fixed game facts — do not tune these
+
+These values come from Kaggriculture's rules. If a run goes badly, we do not
+change them to make the model look better.
+
+| Fixed fact | Examples |
+|---|---|
+| Carrot mechanics | Seed cost, growth days, watering bonus, and yield cap |
+| Town mechanics | Town-center demand and shop consumption schedules |
+| Shop randomness | Each future shop type has probability $1/8$ |
+| Market mechanics | Inventory changes and the carrot price function |
+| Market permissions | Carrots can be sold but cannot be bought back |
+
+For example, this is a game fact, not a parameter to calibrate:
+
+$$
+P(\operatorname{NextShopIsPetCafe}) = \frac{1}{8}
+$$
+
+### 12.2 Tunable belief parameters
+
+These numbers summarize uncertainty that the observation does not reveal. They
+begin as stated assumptions and can be improved using repeated matches and
+replays.
+
+| Axis | Example parameter | Meaning |
+|---|---|---|
+| Opponent-supply belief | $P(HighSupply \mid 1\text{–}3\ \text{ripe opponent carrots}) = 0.30$ | How strongly visible opponent carrots predict a glut |
+| Evidence weighting | A ripe carrot counts more than a newly planted carrot | How crop age changes the supply belief |
+| Price belief | $P(LOW \mid HighSupply, NoNewDemand)$ | How supply and demand map to a future price category |
+| Demand horizon | Include only shop unlocks before our planned sale | How far ahead the model looks |
+
+Every probability must stay between 0 and 1. When a probability table lists
+exclusive outcomes, each row must add up to 1.
+
+For example, this price-belief row is valid:
+
+| Conditions | $P(LOW)$ | $P(NORMAL)$ | $P(HIGH)$ |
+|---|---:|---:|---:|
+| High opponent supply, no new carrot-demand shop | 0.70 | 0.25 | 0.05 |
+
+because:
+
+$$
+0.70 + 0.25 + 0.05 = 1
+$$
+
+### 12.3 Tunable decision-policy parameters
+
+These are not beliefs about the world. They express how cautiously the agent
+acts on those beliefs.
+
+| Axis | Example parameter | Effect |
+|---|---|---|
+| Risk penalty | $\lambda$ in cautious price | Larger values penalize uncertain outcomes more strongly |
+| Planting margin | `minimum_advantage_to_plant` | Requires carrots to beat waiting by a chosen amount |
+| Opportunity cost | `tile_action_opportunity_cost` | Values the tile and future care actions consumed by carrots |
+| Yield assumption | Baseline of 3 carrots versus a fertilized plan of 4 | Changes the value expected from successful care |
+
+The cautious-price rule is:
+
+$$
+\operatorname{CautiousPrice}
+= \operatorname{MeanPrice}
+- \lambda \cdot \operatorname{PriceUncertainty}
+$$
+
+Increasing $\lambda$ does not claim that the market has changed. It only makes
+our decision policy less willing to risk an uncertain carrot investment.
+
+## 13. How to run one controlled experiment
+
+```mermaid
+flowchart LR
+    Base[Record baseline parameters] --> Run1[Run a fixed seed suite]
+    Run1 --> Review[Review score and prediction log]
+    Review --> Change[Change one parameter only]
+    Change --> Run2[Repeat identical seed suite]
+    Run2 --> Compare{Improves defined metric?}
+    Compare -->|Yes| Keep[Keep candidate as new baseline]
+    Compare -->|No| Revert[Restore previous baseline]
+```
+
+The controls that must remain fixed in a comparison are:
+
+- random seed or fixed suite of seeds;
+- episode length and game configuration;
+- opponent implementation;
+- agent implementation, except for the one named parameter change.
+
+### 13.1 First recommended experiment
+
+Start by changing only this belief:
+
+$$
+P(\operatorname{OpponentCarrotSupplyHigh}
+\mid 1\text{–}3\ \text{ripe opponent carrot tiles})
+$$
+
+For example, compare a baseline of $0.30$ with a candidate of $0.35$. Do not
+also change the risk penalty, price table, or planting threshold in the same
+experiment. Otherwise we cannot tell which change caused the result.
+
+## 14. Score decisions and probabilities separately
+
+A winning match does not prove that every probability was well calibrated; it
+may have been a lucky outcome. Conversely, a sound belief can lead to a loss in
+one unlucky match. We track two kinds of score.
+
+### 14.1 Decision outcomes
+
+- final bank balance;
+- win/loss against a fixed opponent;
+- number of carrots planted and harvested;
+- carrot revenue and average carrot sale price.
+
+### 14.2 Belief calibration
+
+For every predicted event, log:
+
+```text
+predicted probability p
+actual outcome y, where y = 1 if the event happened and y = 0 otherwise
+```
+
+One simple calibration score is the Brier score:
+
+$$
+\operatorname{BrierScore} = (p-y)^2
+$$
+
+Lower is better. Across many predictions, average the score:
+
+$$
+\operatorname{MeanBrierScore}
+= \frac{1}{N}\sum_{i=1}^{N}(p_i-y_i)^2
+$$
+
+Example: predicting a 70% chance of high opponent carrot supply and observing
+that it did occur gives:
+
+$$
+(0.70 - 1)^2 = 0.09
+$$
+
+The same prediction when high supply does not occur gives:
+
+$$
+(0.70 - 0)^2 = 0.49
+$$
+
+Over enough matches, well-calibrated probabilities receive lower average
+scores. This lets us improve the belief network itself, separately from whether
+its current decision policy earns the most money.
+
+## 15. Initial agents to compare
+
+We will study these agents before adding more crops or production chains.
+
+| Agent | Economic behavior | Purpose |
+|---|---|---|
+| Built-in `pass` | Performs no useful work at all | Sanity check only |
+| Carrot conveyor | Buys seeds, plants carrots whenever possible, waters, harvests at peak, and sells carrots | Deterministic baseline with no beliefs |
+| Carrot decision agent | Performs the same care work but chooses `PLANT CARROT` or `PASS` from this network | Tests whether beliefs improve the baseline |
+
+The carrot conveyor is the meaningful comparison. It answers: “Does the
+decision network beat a farmer who simply grows carrots continuously?”

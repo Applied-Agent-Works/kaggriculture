@@ -370,3 +370,7 @@ Per-crop seed costs and per-product base prices are not configurable; they are d
 | townCenterSellInterval | 24 | Turns between consumption ticks by the town center (flat rate, once per day) |
 | seed | null | Optional input seed for deterministic episode generation; cleared from config after read so it stays out of agent observations |
 
+## Getting Started
+
+For building, locally testing, and submitting an agent, see
+[GETTING_STARTED.md](GETTING_STARTED.md).
