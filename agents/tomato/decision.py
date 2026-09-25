@@ -1,9 +1,9 @@
 """Kaggriculture entry point for the Tomato decision policy."""
 
 try:
-    from .shared import tomato_decision_agent
+    from agents.tomato.shared import tomato_decision_agent
 except (ImportError, KeyError):
-    from shared import tomato_decision_agent
+    from .shared import tomato_decision_agent
 
 
 def agent(obs):

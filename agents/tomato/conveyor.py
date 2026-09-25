@@ -1,9 +1,9 @@
 """Kaggriculture entry point for the unconditional Tomato baseline."""
 
 try:
-    from .shared import tomato_conveyor_agent
+    from agents.tomato.shared import tomato_conveyor_agent
 except (ImportError, KeyError):
-    from shared import tomato_conveyor_agent
+    from .shared import tomato_conveyor_agent
 
 
 def agent(obs):

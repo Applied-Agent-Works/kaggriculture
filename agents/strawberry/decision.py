@@ -1,9 +1,9 @@
 """Kaggriculture entry point for the Strawberry decision policy."""
 
 try:
-    from .shared import strawberry_decision_agent
+    from agents.strawberry.shared import strawberry_decision_agent
 except (ImportError, KeyError):
-    from shared import strawberry_decision_agent
+    from .shared import strawberry_decision_agent
 
 
 def agent(obs):
