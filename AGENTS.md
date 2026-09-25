@@ -18,9 +18,11 @@ Read these documents before changing architecture or decision logic:
    architecture, decision networks, experiment method, and invariants.
 4. `carrot-decision-network.md` — the first concrete carrot influence diagram
    and its current assumptions.
-5. `foundry-refinement-architecture.md` — the separate Foundry-based offline
+5. `wheat-decision-network.md` and `melon-decision-network.md` — parallel
+   starter crop networks, intentionally excluding production chains.
+6. `foundry-refinement-architecture.md` — the separate Foundry-based offline
    refinement system and its boundaries.
-6. `TEMP_MEMORY.md` and `TEMP_HANDOFF.md` — temporary historical context;
+7. `TEMP_MEMORY.md` and `TEMP_HANDOFF.md` — temporary historical context;
    consult them when reconstructing decisions that are not yet reflected in
    the durable architecture documents.
 
@@ -34,6 +36,12 @@ The current implementation is deliberately narrow:
 - `agents/carrot/conveyor.py` exposes the unconditional carrot baseline.
 - `agents/carrot/decision.py` exposes the probabilistic plant-versus-pass
   policy.
+- `agents/one_time_crop.py` contains the shared one-active-crop loop for the
+  standalone wheat and melon examples.
+- `agents/wheat/` and `agents/melon/` each contain crop facts plus conveyor
+  and decision entry points. Their current decision policies use today's
+  market quote as a deterministic harvest-price estimate; calibrated
+  probability tables have not been added.
 - Root `main.py` is the Kaggle submission entry point for the decision policy.
 - `run_match.py` runs local matches and accepts `--seed` for reproducibility.
 - `agents/archive/` retains historical implementations; do not delete them
@@ -43,6 +51,9 @@ The first economic question is intentionally only:
 
 > Given one empty unlocked tile and an already-owned carrot seed, should the
 > agent plant a carrot now or choose `PASS`?
+
+Wheat and melon repeat that narrow question as separate one-tile examples.
+They do not combine crop choices or extend wheat into an animal-feed chain.
 
 Do not silently expand this into an all-crop, all-action optimizer.
 
