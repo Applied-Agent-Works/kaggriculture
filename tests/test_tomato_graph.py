@@ -42,3 +42,25 @@ def test_decision_passes_custom_horizon_to_action_helpers():
     # The market order delivers the seed for a later turn; planting cannot
     # consume it before that order has been processed.
     assert action["farmer"] == ["PASS"]
+
+
+def test_tomato_decision_has_explicit_plant_and_pass_branches():
+    base_obs = {
+        "day": 0,
+        "player": 0,
+        "farms": [{
+            "money": 100,
+            "farmer": [0, 0],
+            "tiles": [[None]],
+        }],
+        "private": {"seeds": {"TOMATO": 1}, "shed": {}},
+        "market": {"prices": {"TOMATO": 60}},
+    }
+
+    plant_action = decision_agent(base_obs, TOMATO)
+    assert plant_action["farmer"] == ["PLANT", "TOMATO"]
+
+    cautious = OngoingCropParameters(future_price_multiplier=0.1)
+    pass_action = decision_agent(base_obs, TOMATO, cautious)
+    assert pass_action["farmer"] == ["PASS"]
+    assert pass_action["market"] == []
