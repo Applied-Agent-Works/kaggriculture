@@ -1,9 +1,21 @@
 """Tomato facts and adapters for the shared ongoing-crop lifecycle."""
 
 try:
-    from agents.ongoing_crop import OngoingCrop, conveyor_agent, decision_agent
+    from agents.ongoing_crop import (
+        DEFAULT_ONGOING_PARAMETERS,
+        OngoingCrop,
+        OngoingCropParameters,
+        conveyor_agent,
+        decision_agent,
+    )
 except ImportError:
-    from ..ongoing_crop import OngoingCrop, conveyor_agent, decision_agent
+    from ..ongoing_crop import (
+        DEFAULT_ONGOING_PARAMETERS,
+        OngoingCrop,
+        OngoingCropParameters,
+        conveyor_agent,
+        decision_agent,
+    )
 
 
 TOMATO = OngoingCrop(
@@ -14,11 +26,17 @@ TOMATO = OngoingCrop(
 )
 
 
-def tomato_conveyor_agent(obs: dict) -> dict:
+def tomato_conveyor_agent(
+    obs: dict,
+    parameters: OngoingCropParameters = DEFAULT_ONGOING_PARAMETERS,
+) -> dict:
     """Always run one Tomato crop cycle when its schedule fits the season."""
-    return conveyor_agent(obs, TOMATO)
+    return conveyor_agent(obs, TOMATO, parameters)
 
 
-def tomato_decision_agent(obs: dict) -> dict:
+def tomato_decision_agent(
+    obs: dict,
+    parameters: OngoingCropParameters = DEFAULT_ONGOING_PARAMETERS,
+) -> dict:
     """Use the ongoing-crop plant-versus-PASS decision for Tomato."""
-    return decision_agent(obs, TOMATO)
+    return decision_agent(obs, TOMATO, parameters)
