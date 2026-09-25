@@ -18,9 +18,11 @@ scheduled production ages and only begins decay after the final production.
 - No crop portfolio selection.
 - No animals, wheat feed chain, hired hands, or Foundry calls.
 
-The lifecycle is supplied by the shared `agents/ongoing_crop.py` interface
-created by the Tomato graph. This Strawberry fork adds only crop facts,
-adapters, tests, and this decision-network document.
+The lifecycle is supplied by the shared `agents/ongoing_crop.py` interface.
+The Strawberry adapter passes an explicit `OngoingCropParameters` object to
+that lifecycle; it never relies on an ambient crop or policy module. This
+Strawberry fork adds only crop facts, adapters, tests, and this
+decision-network document.
 
 ## Fixed Strawberry facts
 
@@ -117,8 +119,9 @@ U(PlantStrawberry) > U(PASS)
 $$
 
 The initial implementation uses a named `future_price_multiplier` and a
-named care-success probability in the shared helper. These are provisional
-belief/preferences, not game facts.
+named care-success probability in the shared helper. Callers pass those
+values through `OngoingCropParameters`; no policy source is mutated. These
+are provisional belief/preferences, not game facts.
 
 ## Fixed facts versus tunable beliefs
 
@@ -153,5 +156,6 @@ resolving labels are defined.
 - No exact forward market simulation.
 - No calibrated probability table yet.
 - No animal production or wheat-feed value.
-- Integration tests must still verify the exact production and decay timing
-  against the game engine.
+- The simulator regression currently covers the exact production schedule,
+  daily watering, harvest-without-removal, fourth-production decay marker,
+  eventual weed conversion, and fixed-seed deterministic replay.

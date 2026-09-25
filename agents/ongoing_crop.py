@@ -220,13 +220,22 @@ def _market_orders(
     return orders
 
 
-def conveyor_agent(obs: dict, crop: OngoingCrop) -> dict:
-    """Run the one-tile ongoing crop cycle without a utility decision."""
-    invest = can_reach_final_production(obs, crop)
+def conveyor_agent(
+    obs: dict,
+    crop: OngoingCrop,
+    parameters: OngoingCropParameters = DEFAULT_ONGOING_PARAMETERS,
+) -> dict:
+    """Run the one-tile ongoing crop cycle without a utility decision.
+
+    The conveyor remains an unconditional baseline, but it still accepts the
+    explicit parameter object so horizon and policy assumptions cannot leak in
+    through module globals when a caller runs a controlled experiment.
+    """
+    invest = can_reach_final_production(obs, crop, parameters)
     return {
-        "farmer": _farm_action(obs, crop, invest),
+        "farmer": _farm_action(obs, crop, invest, parameters),
         "hands": [],
-        "market": _market_orders(obs, crop, invest),
+        "market": _market_orders(obs, crop, invest, parameters),
     }
 
 
