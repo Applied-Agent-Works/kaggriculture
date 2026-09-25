@@ -155,7 +155,12 @@ def should_plant_ongoing_crop(
     )
 
 
-def _farm_action(obs: dict, crop: OngoingCrop, invest: bool):
+def _farm_action(
+    obs: dict,
+    crop: OngoingCrop,
+    invest: bool,
+    parameters: OngoingCropParameters = DEFAULT_ONGOING_PARAMETERS,
+):
     """Care for one active crop, harvest available units, or plant one."""
     farm = _my_farm(obs)
     current = tuple(farm["farmer"])
@@ -174,7 +179,7 @@ def _farm_action(obs: dict, crop: OngoingCrop, invest: bool):
             return ["HARVEST"]
         return ["PASS"]
 
-    if not invest or not can_reach_final_production(obs, crop):
+    if not invest or not can_reach_final_production(obs, crop, parameters):
         return ["PASS"]
 
     target = _first_empty_position(farm)
@@ -187,7 +192,12 @@ def _farm_action(obs: dict, crop: OngoingCrop, invest: bool):
     return ["PASS"]
 
 
-def _market_orders(obs: dict, crop: OngoingCrop, invest: bool):
+def _market_orders(
+    obs: dict,
+    crop: OngoingCrop,
+    invest: bool,
+    parameters: OngoingCropParameters = DEFAULT_ONGOING_PARAMETERS,
+):
     farm = _my_farm(obs)
     private = obs["private"]
     orders = []
@@ -204,7 +214,7 @@ def _market_orders(obs: dict, crop: OngoingCrop, invest: bool):
         and not has_seed
         and _first_empty_position(farm) is not None
         and farm["money"] >= crop.seed_cost
-        and can_reach_final_production(obs, crop)
+        and can_reach_final_production(obs, crop, parameters)
     ):
         orders.append(["BUY_SEED", crop.name, 1])
     return orders
@@ -228,7 +238,7 @@ def decision_agent(
     """Run the ongoing crop loop using plant-versus-PASS utility."""
     invest = should_plant_ongoing_crop(obs, crop, parameters)
     return {
-        "farmer": _farm_action(obs, crop, invest),
+        "farmer": _farm_action(obs, crop, invest, parameters),
         "hands": [],
-        "market": _market_orders(obs, crop, invest),
+        "market": _market_orders(obs, crop, invest, parameters),
     }

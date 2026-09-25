@@ -1,4 +1,9 @@
-from agents.ongoing_crop import OngoingCrop, OngoingCropParameters, production_due
+from agents.ongoing_crop import (
+    OngoingCrop,
+    OngoingCropParameters,
+    decision_agent,
+    production_due,
+)
 from agents.tomato.shared import TOMATO
 
 
@@ -17,3 +22,23 @@ def test_expected_value_uses_four_production_events():
     from agents.ongoing_crop import expected_ongoing_crop_value
 
     assert expected_ongoing_crop_value(obs, TOMATO, parameters) == 4 * 60 - 50
+
+
+def test_decision_passes_custom_horizon_to_action_helpers():
+    obs = {
+        "day": 25,
+        "player": 0,
+        "farms": [{
+            "money": 100,
+            "farmer": [0, 0],
+            "tiles": [[None]],
+        }],
+        "private": {"seeds": {}, "shed": {}},
+        "market": {"prices": {"TOMATO": 60}},
+    }
+    parameters = OngoingCropParameters(season_days=50)
+    action = decision_agent(obs, TOMATO, parameters)
+    assert action["market"] == [["BUY_SEED", "TOMATO", 1]]
+    # The market order delivers the seed for a later turn; planting cannot
+    # consume it before that order has been processed.
+    assert action["farmer"] == ["PASS"]
