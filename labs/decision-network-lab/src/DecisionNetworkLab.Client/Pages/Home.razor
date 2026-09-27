@@ -1,0 +1,158 @@
+@page "/"
+@using DecisionNetworkLab.Core
+
+<PageTitle>Decision Network Lab</PageTitle>
+
+<section class="lab-intro">
+    <p class="eyebrow">Kaggriculture learning tool</p>
+    <h1>Decision Network Lab</h1>
+    <p class="lead">
+        Change one visible assumption at a time and see how it affects the
+        explicit choice between planting a crop and passing.
+    </p>
+</section>
+
+<section class="network-picker panel" aria-labelledby="network-picker-title">
+    <div>
+        <h2 id="network-picker-title">Choose a crop network</h2>
+        <p class="help-text">Carrot shows the first coarse belief model. Wheat and melon begin with point-price estimates.</p>
+    </div>
+    <label class="field compact-field">
+        <span>Crop network</span>
+        <select @bind="SelectedNetworkId">
+            @foreach (var network in Networks)
+            {
+                <option value="@network.Id">@network.Name</option>
+            }
+        </select>
+    </label>
+</section>
+
+<div class="experience-layout">
+<section class="panel network-panel @(DiagramExpanded ? "network-panel-expanded" : string.Empty)" aria-labelledby="diagram-title">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Structure</p>
+            <h2 id="diagram-title">@CurrentNetwork.Name decision network</h2>
+        </div>
+        <div class="diagram-actions">
+            <span class="help-text">Arrows describe information flow, not code dependencies.</span>
+            <button class="diagram-expand-button" type="button" @onclick="ToggleDiagramExpanded">
+                @(DiagramExpanded ? "Close full view" : "Open full view")
+            </button>
+        </div>
+    </div>
+    <DecisionNetworkDiagram Network="CurrentNetwork" />
+</section>
+
+<div class="workspace-grid">
+    <section class="panel scenario-panel" aria-labelledby="scenario-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Inputs</p>
+                <h2 id="scenario-title">Explore a scenario</h2>
+            </div>
+            <span class="model-badge">@CurrentNetwork.PricingApproach</span>
+        </div>
+
+        <p>@CurrentNetwork.Summary</p>
+
+        <div class="field-grid">
+            <label class="field">
+                <span>Day</span>
+                <input type="number" min="0" max="29" @bind="CurrentScenario.Day" />
+                <small>Day 0 is the start of the season.</small>
+            </label>
+
+            <label class="field">
+                <span>Current price</span>
+                <input type="number" min="0" step="1" @bind="CurrentScenario.CurrentPrice" />
+                <small>Coins per crop unit.</small>
+            </label>
+
+            <label class="field">
+                <span>Future price multiplier</span>
+                <input type="number" min="0" step="0.05" @bind="CurrentScenario.FuturePriceMultiplier" />
+                <small>1.0 means “use the current quote.”</small>
+            </label>
+
+            <label class="field">
+                <span>Care success</span>
+                <input type="number" min="0" max="1" step="0.05" @bind="CurrentScenario.CareSuccessProbability" />
+                <small>Enter a value from 0.0 to 1.0.</small>
+            </label>
+
+            @if (CurrentNetwork.PricingApproach == PricingApproach.CarrotBeliefModel)
+            {
+                <label class="field">
+                    <span>Visible mature opponent crops</span>
+                    <input type="number" min="0" step="1" @bind="CurrentScenario.VisibleOpponentMatureCrops" />
+                    <small>Evidence about possible future supply.</small>
+                </label>
+
+                <label class="field">
+                    <span>Active demand sources</span>
+                    <input type="number" min="0" max="2" step="1" @bind="CurrentScenario.ActiveDemandSources" />
+                    <small>Simple first-pass demand signal.</small>
+                </label>
+            }
+        </div>
+
+        <div class="fixed-facts">
+            <h3>Fixed game facts</h3>
+            <ul>
+                @foreach (var fact in CurrentNetwork.FixedFacts)
+                {
+                    <li><span>@fact.Label</span><strong>@fact.Value</strong></li>
+                }
+            </ul>
+        </div>
+    </section>
+
+    <section class="panel result-panel" aria-labelledby="result-title" aria-live="polite">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Evaluation</p>
+                <h2 id="result-title">Recommendation: @Result.Recommendation</h2>
+            </div>
+            <span class="recommendation recommendation-@Result.Recommendation.ToLowerInvariant()">@Result.Recommendation</span>
+        </div>
+
+        <div class="utility-comparison">
+            <div>
+                <span>Plant utility</span>
+                <strong>@Result.PlantUtility.ToString("0.##")</strong>
+            </div>
+            <div>
+                <span>PASS utility</span>
+                <strong>@Result.PassUtility.ToString("0.##")</strong>
+            </div>
+            <div>
+                <span>Expected yield</span>
+                <strong>@Result.ExpectedYield.ToString("0.##")</strong>
+            </div>
+            <div>
+                <span>Expected price</span>
+                <strong>@Result.PriceBelief.ExpectedPrice.ToString("0.##")</strong>
+            </div>
+        </div>
+
+        <h3>Why?</h3>
+        <ol class="explanation-list">
+            @foreach (var explanation in Result.Explanation)
+            {
+                <li>@explanation</li>
+            }
+        </ol>
+
+        <div class="price-belief">
+            <h3>Price belief</h3>
+            <div class="belief-row"><span>LOW</span><strong>@Result.PriceBelief.LowProbability.ToString("P0")</strong><span>@Result.PriceBelief.LowPrice.ToString("0.##") coins</span></div>
+            <div class="belief-row"><span>NORMAL</span><strong>@Result.PriceBelief.NormalProbability.ToString("P0")</strong><span>@Result.PriceBelief.NormalPrice.ToString("0.##") coins</span></div>
+            <div class="belief-row"><span>HIGH</span><strong>@Result.PriceBelief.HighProbability.ToString("P0")</strong><span>@Result.PriceBelief.HighPrice.ToString("0.##") coins</span></div>
+        </div>
+    </section>
+</div>
+
+<ExperimentEvidencePrototype Evidence="Evidence" />
+</div>

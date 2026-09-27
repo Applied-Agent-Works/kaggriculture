@@ -18,6 +18,11 @@ dist/
 dist-ssr/
 *.local
 
+# .NET build outputs for the decision-network lab
+labs/decision-network-lab/**/bin/
+labs/decision-network-lab/**/obj/
+labs/decision-network-lab/evaluation/results/
+
 # Editor / OS
 .vscode/*
 !.vscode/extensions.json

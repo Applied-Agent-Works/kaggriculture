@@ -1,0 +1,97 @@
+@using DecisionNetworkLab.Core
+
+<div class="uml-diagram-shell">
+    <svg class="uml-diagram" viewBox="0 0 @SvgWidth @SvgHeight" role="img" aria-labelledby="@TitleId @DescriptionId">
+        <title id="@TitleId">@Network.Name decision network</title>
+        <desc id="@DescriptionId">Select a node to read its explanation. Arrows show information flow.</desc>
+
+        <defs>
+            <marker id="uml-arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+                <path d="M 0 0 L 9 4.5 L 0 9 z" />
+            </marker>
+        </defs>
+
+        <g class="uml-edges" aria-hidden="true">
+            @foreach (var edge in Network.Edges)
+            {
+                var line = GetEdgeLine(edge);
+
+                if (line is not null)
+                {
+                    <line class="uml-edge"
+                          x1="@(line.X1)"
+                          y1="@(line.Y1)"
+                          x2="@(line.X2)"
+                          y2="@(line.Y2)"
+                          marker-end="url(#uml-arrow)" />
+                }
+            }
+        </g>
+
+        <g class="uml-nodes">
+            @foreach (var layout in Layouts)
+            {
+                var isSelected = SelectedNode?.Id == layout.Node.Id;
+
+                <g class="uml-node @NodeCssClass(layout.Node.Kind) @(isSelected ? "uml-node-selected" : string.Empty)"
+                   role="button"
+                   tabindex="0"
+                   aria-label="Select @(layout.Node.Label)"
+                   @onclick="() => SelectNode(layout.Node)"
+                   @onkeydown="args => HandleKeyDown(args, layout.Node)">
+                    <title>@(layout.Node.Label): @(layout.Node.Description)</title>
+
+                    @if (IsRectangular(layout.Node.Kind))
+                    {
+                        <rect class="uml-shape"
+                              x="@(layout.CenterX - HalfWidth(layout))"
+                              y="@(layout.CenterY - HalfHeight(layout))"
+                              width="@(HalfWidth(layout) * 2)"
+                              height="@(HalfHeight(layout) * 2)"
+                              rx="6" />
+                    }
+                    else if (layout.Node.Kind == NetworkNodeKind.Decision)
+                    {
+                        <polygon class="uml-shape" points="@DiamondPoints(layout)" />
+                    }
+                    else
+                    {
+                        <ellipse class="uml-shape"
+                                 cx="@(layout.CenterX)"
+                                 cy="@(layout.CenterY)"
+                                 rx="@HalfWidth(layout)"
+                                 ry="@HalfHeight(layout)" />
+                    }
+
+                    <text class="uml-kind" x="@(layout.CenterX)" y="@(layout.CenterY - 48)" text-anchor="middle">@(layout.Node.Kind.ToString().ToUpperInvariant())</text>
+                    <text class="uml-label" x="@(layout.CenterX)" y="@(layout.CenterY - 19)" text-anchor="middle">
+                        @foreach (var line in WrapText(layout.Node.Label, 27))
+                        {
+                            <tspan x="@(layout.CenterX)" dy="@(line.Index == 0 ? "0" : "17")">@line.Text</tspan>
+                        }
+                    </text>
+                    <text class="uml-description" x="@(layout.CenterX)" y="@(layout.CenterY + 20)" text-anchor="middle">
+                        @foreach (var line in WrapText(layout.Node.Description, 31))
+                        {
+                            <tspan x="@(layout.CenterX)" dy="@(line.Index == 0 ? "0" : "15")">@line.Text</tspan>
+                        }
+                    </text>
+                </g>
+            }
+        </g>
+    </svg>
+
+    @if (SelectedNode is not null)
+    {
+        <aside class="uml-node-details" aria-live="polite">
+            <p class="eyebrow">Selected node</p>
+            <h3>@SelectedNode.Label</h3>
+            <p><strong>Type:</strong> @SelectedNode.Kind</p>
+            <p>@SelectedNode.Description</p>
+        </aside>
+    }
+    else
+    {
+        <p class="uml-help-text">Select a node to see what it means in the network.</p>
+    }
+</div>

@@ -1,0 +1,42 @@
+.lab-nav-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
+}
+
+.lab-nav-content strong {
+    display: block;
+    color: #f7f2e8;
+    font-size: 1rem;
+}
+
+.lab-nav-content p {
+    margin: 0.25rem 0 0;
+    color: #b9c8d8;
+    font-size: 0.82rem;
+}
+
+.lab-mark {
+    color: #f0b35b;
+    font-size: 1.5rem;
+}
+
+nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.nav-link {
+    border-radius: 0.45rem;
+    color: #d9e3ec;
+    padding: 0.7rem 0.8rem;
+    text-decoration: none;
+}
+
+.nav-link.active,
+.nav-link:hover {
+    background: #23445f;
+    color: #ffffff;
+}

@@ -1,0 +1,43 @@
+.page {
+    min-height: 100vh;
+}
+
+main {
+    min-width: 0;
+    width: 100%;
+}
+
+.sidebar {
+    background: #10283a;
+    color: #f7f2e8;
+}
+
+.top-row {
+    align-items: center;
+    background: #0f1b25;
+    border-bottom: 1px solid #2d4555;
+    color: #9eb2bf;
+    display: flex;
+    font-size: 0.85rem;
+    justify-content: flex-end;
+    min-height: 3.25rem;
+    padding: 0.75rem 2rem;
+}
+
+.content {
+    margin: 0 auto;
+    max-width: none;
+    padding: 2rem clamp(1rem, 3vw, 3rem) 3rem;
+    width: 100%;
+}
+
+@media (min-width: 720px) {
+    .page {
+        display: grid;
+        grid-template-columns: 230px minmax(0, 1fr);
+    }
+
+    .sidebar {
+        min-height: 100vh;
+    }
+}

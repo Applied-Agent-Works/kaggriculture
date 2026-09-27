@@ -1,0 +1,418 @@
+# Decision Network Lab
+
+This lab is the first user experience for learning from the Kaggriculture
+decision-network work. It is a small, client-side Blazor WebAssembly tool for
+asking:
+
+> Given the current evidence and assumptions, should the farmer plant this crop
+> or choose `PASS`?
+
+The lab is deliberately a learning tool, not the live Kaggriculture agent and
+not a Foundry runtime. It makes assumptions visible, lets a learner change one
+input at a time, and explains the resulting utility comparison.
+
+## Current scope
+
+The first slice includes the three confirmed one-time crop networks:
+
+- Carrot — the first coarse supply and demand belief model;
+- Wheat — a point estimate using today's quote;
+- Melon / watermelon — a point estimate using today's quote.
+
+The UI currently supports:
+
+1. choosing a crop network;
+2. changing day, price, care success, and policy assumptions;
+3. changing carrot-specific visible-supply and demand evidence;
+4. viewing fixed game facts separately from tunable assumptions;
+5. comparing expected `PLANT` utility with `PASS` utility;
+6. reading a plain-language explanation of the recommendation;
+7. exploring an interactive SVG UML-style diagram with arrowed information
+   flow, selectable nodes, and an optional full 16:9 view.
+8. reviewing a compact Phase 2 evidence prototype on the same screen, with
+   paired-run summaries and a selectable trace preview.
+
+This first slice does not yet run the full Kaggriculture simulator, call the
+Python agents, call Foundry, persist experiment results, or use a server API.
+The evidence panel currently uses a frozen in-memory fixture based on the first
+local carrot package; it is not yet the package importer.
+
+## Roadmap and phase status
+
+The lab is intentionally being built in layers. The lab experience is a
+learning and evidence tool; it is not the live contest agent.
+
+```mermaid
+flowchart LR
+    P["Planning and scope"] --> M["Core decision model"]
+    M --> U["Interactive Blazor experience"]
+    U --> E["Local experiments and evidence"]
+    E --> R["Model refinement"]
+    R --> C["Contest policy integration"]
+
+    F["Optional offline Foundry advisory"] -. "frozen evidence only" .-> E
+    F -. "human-reviewed suggestions" .-> R
+```
+
+### Phase 0 — Planning and boundaries
+
+Status: complete.
+
+- Defined the Decision Network Laboratory as the first user experience.
+- Confirmed the initial scope: carrot, wheat, and melon/watermelon.
+- Separated the lab from the live Python policy, simulator, and Foundry work.
+- Established the lab question log and architecture decision log.
+
+### Phase 1 — Decision Network Laboratory
+
+Status: first vertical slice and core test suite implemented; model-review
+questions remain deferred.
+
+Completed:
+
+- standalone Blazor WebAssembly client;
+- separate calculation core and presentation client;
+- three crop definitions and basic evaluators;
+- `PLANT` versus `PASS` utility comparison;
+- fixed facts versus scenario assumptions;
+- Mermaid topology reference;
+- interactive, keyboard-accessible SVG UML-style diagram;
+- dark, wide-screen layout and full-view diagram mode;
+- beginner documentation and durable decision records.
+
+Remaining before formally closing Phase 1:
+
+1. Add automated core tests for the three crop evaluators. **Complete: 10
+   MSTest tests pass.**
+2. Browser-check carrot, wheat, and melon after the final layout changes. **Complete.**
+3. Verify node selection and keyboard interaction in the full-view diagram.
+   **Node selection is confirmed working for all three graphs.**
+4. Decide whether `MarketInventory` is a real Phase 1 input or should remain
+   deferred until the evidence/simulation phase. **Deferred until the new
+   carrot decision graph is available.**
+5. Review the displayed assumptions against the source decision-network
+   documents and record any intentional simplifications. **Deferred until the
+   new carrot decision graph is available.**
+
+The automated test suite is complete. The two deferred model-review questions
+must not block the next phase.
+
+### Core test coverage
+
+The [DecisionNetworkLab.Core.Tests](tests/DecisionNetworkLab.Core.Tests/)
+project checks:
+
+- the three-network catalog;
+- graph edge integrity;
+- default `PLANT` recommendations;
+- carrot LOW/NORMAL/HIGH probability values;
+- carrot supply evidence changing expected price;
+- wheat point-price multipliers;
+- care risk making planting unattractive;
+- melon season-horizon gating.
+
+### Phase 2 — Local experiments and evidence
+
+Phase 2 has two connected parts: generate trustworthy local evidence and make
+that evidence understandable in the lab UI. The UI should not become a live
+simulator or hidden policy engine; it should be a read-only, evidence-focused
+view of completed experiments.
+
+Next after Phase 1 acceptance:
+
+- fixed-seed experiment requests;
+- baseline-versus-candidate comparisons;
+- one-parameter changes;
+- lifecycle summaries and decision traces;
+- frozen JSON evidence packages for later review;
+- a lab UI view for loading an experiment package;
+- comparison panels for baseline versus candidate outcomes;
+- decision-trace and plant/pass summaries;
+- evidence links from a displayed result back to its manifest and source
+  revision;
+- a clear distinction between observed results, model predictions, and later
+  advisory commentary.
+
+The first Phase 2 UI should probably be an experiment-review view rather than
+an interactive simulator. It should help answer “what happened, under which
+controls, and what did the policy believe?” before we add live replay or
+parameter editing.
+
+The first evidence producer is documented in
+[evaluation/README.md](evaluation/README.md). It generates the manifest,
+run-summary, and compressed trace artifacts that a later read-only UI view can
+load.
+
+### Phase 3 — Crop-model refinement
+
+- replace wheat and melon point estimates with measured probability models;
+- improve carrot belief calibration;
+- score financial outcomes separately from belief accuracy;
+- add care-feasibility reasoning where evidence supports it.
+
+### Phase 4 — Advisory refinement
+
+Foundry may inspect frozen local evidence and propose one falsifiable next
+experiment. It must not choose live actions, mutate the policy automatically,
+or replace local controlled evaluation.
+
+### Phase 5 — Contest integration
+
+Only after local evidence supports a policy should a selected local policy be
+promoted into the contest-facing `main.py`. The live agent must continue to run
+without Blazor, Foundry, cloud services, or LLM calls.
+
+## Run locally
+
+From this directory:
+
+```powershell
+dotnet run --project src/DecisionNetworkLab.Client/DecisionNetworkLab.Client.csproj
+```
+
+The first build may restore the Microsoft Blazor framework packages declared
+by the generated WebAssembly project. No third-party UI component library or
+external service package is used by this lab.
+
+## Reconstruct on a new machine
+
+The lab is intended to be reconstructable from source rather than copied with
+machine-specific build output.
+
+1. Install the .NET SDK version recorded in [global.json](global.json).
+2. Open a terminal in this directory.
+3. Restore the exact package graph:
+
+   ```powershell
+   dotnet restore --locked-mode
+   ```
+
+4. Build or run the client:
+
+   ```powershell
+   dotnet build --no-restore
+   dotnet run --project src/DecisionNetworkLab.Client/DecisionNetworkLab.Client.csproj --no-restore
+   dotnet test --no-restore
+   ```
+
+The committed [client package lock](src/DecisionNetworkLab.Client/packages.lock.json)
+and [test package lock](tests/DecisionNetworkLab.Core.Tests/packages.lock.json)
+record the package versions and transitive dependencies. `bin/` and `obj/`
+are intentionally ignored because they are generated again by restore and
+build. The local NuGet cache is also not part of the repository; a new machine
+downloads the declared Microsoft packages during restore.
+
+If a package reference is intentionally changed, regenerate the lock file with
+`dotnet restore --force-evaluate`, review the diff, and commit the updated lock
+file with the project change.
+
+## Separation of concerns
+
+The lab has two projects in the first slice:
+
+- `DecisionNetworkLab.Core` contains network definitions, scenario values,
+  belief calculations, utility calculations, and explanations.
+- `DecisionNetworkLab.Client` contains Razor components, browser interaction,
+  and presentation styles.
+- `DecisionNetworkLab.Core.Tests` verifies the core without starting a browser
+  or simulator.
+
+The client references the core. The core does not reference Blazor, HTML,
+browser APIs, HTTP, or the Kaggriculture simulator.
+
+```mermaid
+flowchart LR
+    User["Learner"] --> Client["Blazor WASM client"]
+    Client --> Core["DecisionNetworkLab.Core"]
+    Core --> Result["DecisionResult"]
+    Result --> Client
+
+    Python["Python live agents"] -. "future evidence boundary" .-> Evaluation["Future local evaluation"]
+    Simulator["Kaggriculture simulator"] -. "future evidence boundary" .-> Evaluation
+    Evaluation -. "future artifact exchange" .-> Client
+    Server["Optional server/API"] -. "not needed now" .-> Client
+```
+
+The solid path is the implemented path. Dashed paths are deliberately deferred
+so the first experience can remain understandable and usable offline after it
+has been downloaded.
+
+## Core model
+
+The main model types are intentionally small. A network definition describes
+the teaching content. A scenario contains the learner's current inputs. The
+evaluator returns a complete result for the UI to display.
+
+```mermaid
+classDiagram
+    class DecisionNetworkDefinition {
+        +Id
+        +Name
+        +CropCode
+        +SeedCost
+        +PlannedYield
+        +PlannedHarvestDay
+        +Nodes
+        +Edges
+        +FixedFacts
+        +Parameters
+    }
+
+    class DecisionScenario {
+        +Day
+        +CurrentPrice
+        +FuturePriceMultiplier
+        +CareSuccessProbability
+        +VisibleOpponentMatureCrops
+        +ActiveDemandSources
+        +PassUtility
+    }
+
+    class DecisionEvaluator {
+        +Evaluate(network, scenario)
+    }
+
+    class DecisionResult {
+        +ExpectedYield
+        +PriceBelief
+        +PlantUtility
+        +PassUtility
+        +Recommendation
+        +Explanation
+    }
+
+    class NetworkNode {
+        +Id
+        +Label
+        +Kind
+        +Description
+    }
+
+    class NetworkEdge {
+        +FromNodeId
+        +ToNodeId
+        +Description
+    }
+
+    DecisionNetworkDefinition "1" --> "many" NetworkNode
+    DecisionNetworkDefinition "1" --> "many" NetworkEdge
+    DecisionEvaluator --> DecisionNetworkDefinition
+    DecisionEvaluator --> DecisionScenario
+    DecisionEvaluator --> DecisionResult
+```
+
+The important teaching point is that the UI does not calculate utility. It
+passes a scenario to the evaluator and renders the result.
+
+## Mermaid layout reference
+
+The interactive SVG follows this Mermaid topology for the carrot network. The
+purpose of this diagram is to make the intended reading order explicit before
+the UI adds selection and responsive sizing:
+
+```mermaid
+flowchart TB
+    Day["Evidence: day and remaining season"]
+    Market["Evidence: current market quote"]
+    Opponent["Evidence: visible opponent crops"]
+
+    Demand(("Chance: active and future demand"))
+    Supply(("Chance: opponent supply before sale"))
+    Price(("Chance: sale-price belief"))
+
+    Plant{"Decision: plant carrot or PASS"}
+    Yield["Outcome: expected cared-for yield"]
+    Utility{{"Utility: expected utility"}}
+
+    Day --> Demand
+    Opponent --> Supply
+    Market --> Price
+    Demand --> Price
+    Supply --> Price
+    Plant --> Yield
+    Yield --> Utility
+    Price --> Utility
+    Plant --> Utility
+```
+
+The SVG uses the same layered reading order: evidence at the top, uncertainty
+in the middle, the decision and outcome below it, and utility at the bottom.
+This is why the SVG layout is intentionally network-specific rather than a
+generic row-major card grid.
+
+## First user interaction
+
+```mermaid
+sequenceDiagram
+    actor Learner
+    participant UI as Blazor client
+    participant Catalog as NetworkCatalog
+    participant Evaluator as DecisionEvaluator
+    participant Core as Core calculations
+
+    Learner->>UI: Choose crop network
+    UI->>Catalog: Load definition
+    Catalog-->>UI: Facts, nodes, edges, parameters
+    UI-->>Learner: Show network and controls
+
+    Learner->>UI: Change an input
+    UI->>Evaluator: Evaluate definition and scenario
+    Evaluator->>Core: Infer price belief
+    Core-->>Evaluator: Expected price
+    Evaluator->>Core: Compare PLANT with PASS
+    Core-->>Evaluator: Utility comparison
+    Evaluator-->>UI: DecisionResult
+    UI-->>Learner: Recommendation and explanation
+```
+
+This is a synchronous local interaction. There is no network request between
+changing an input and seeing a result.
+
+## Future experiment interaction
+
+The eventual experiment path must remain separate from the live decision
+calculation:
+
+```mermaid
+sequenceDiagram
+    actor Researcher
+    participant UI as Blazor client
+    participant Runner as Local evaluation runner
+    participant Python as Python policy
+    participant Simulator as Local simulator
+    participant Evidence as Frozen evidence package
+    participant Foundry as Optional advisory analyst
+
+    Researcher->>UI: Define one controlled parameter change
+    UI->>Runner: Submit experiment request
+    Runner->>Python: Load baseline or candidate
+    Runner->>Simulator: Run fixed seed suite
+    Simulator-->>Runner: Results and traces
+    Runner->>Evidence: Write manifest and summaries
+    Evidence-->>UI: Show local comparison
+
+    opt Later advisory review
+        Foundry->>Evidence: Read frozen package
+        Foundry-->>Evidence: Write recommendation
+        UI->>Evidence: Read recommendation
+        UI-->>Researcher: Show recommendation for human review
+    end
+```
+
+Foundry must not choose a live game action, mutate the policy, or replace the
+local controlled experiment.
+
+## Beginner reading guide
+
+- **Fixed facts** come from the game rules. They are not adjusted to improve a
+  result.
+- **Beliefs** describe uncertain things, such as future price or opponent
+  supply.
+- **Preferences** describe how the policy values an action, such as the value
+  assigned to `PASS`.
+- **Utility** is the common scale used to compare the two available actions.
+- **The UI** makes these ideas visible but does not own their meaning.
+
+Read [QUESTIONS.md](QUESTIONS.md) for unresolved and answered questions.
+Read [ARCHITECTURE_DECISIONS.md](ARCHITECTURE_DECISIONS.md) for the reasons
+behind the current shape.

@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DecisionNetworkLab.Client/DecisionNetworkLab.Client.csproj" />
+    <Project Path="src/DecisionNetworkLab.Core/DecisionNetworkLab.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DecisionNetworkLab.Core.Tests/DecisionNetworkLab.Core.Tests.csproj" />
+  </Folder>
+</Solution>
