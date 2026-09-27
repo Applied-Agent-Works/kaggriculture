@@ -31,6 +31,33 @@ public static class DecisionEvaluator
             plantUtility,
             recommendation);
 
+        var actions = new[]
+        {
+            new DecisionActionValue(
+                Action: "PLANT",
+                Utility: plantUtility,
+                IsAvailable: canReachHarvest,
+                IsRecommended: recommendation == "PLANT",
+                Explanation: canReachHarvest
+                    ? "Planting uses the seed opportunity and creates the possible harvest."
+                    : "Planting is unavailable because the crop cannot reach harvest in time."),
+            new DecisionActionValue(
+                Action: "PASS",
+                Utility: scenario.PassUtility,
+                IsAvailable: true,
+                IsRecommended: recommendation == "PASS",
+                Explanation: "Passing preserves the opportunity for a later decision.")
+        };
+
+        var trace = BuildTrace(
+            network,
+            scenario,
+            canReachHarvest,
+            expectedYield,
+            priceBelief,
+            plantUtility,
+            recommendation);
+
         return new DecisionResult(
             Network: network,
             Scenario: scenario,
@@ -40,7 +67,11 @@ public static class DecisionEvaluator
             PlantUtility: plantUtility,
             PassUtility: scenario.PassUtility,
             Recommendation: recommendation,
-            Explanation: explanation);
+            Explanation: explanation)
+        {
+            Actions = actions,
+            Trace = trace
+        };
     }
 
     private static PriceBelief CreatePriceBelief(
@@ -126,6 +157,113 @@ public static class DecisionEvaluator
             : "The model recommends PASS because the utility or timing constraint does not support planting.");
 
         return explanation;
+    }
+
+    private static IReadOnlyList<DecisionTraceStep> BuildTrace(
+        DecisionNetworkDefinition network,
+        DecisionScenario scenario,
+        bool canReachHarvest,
+        decimal expectedYield,
+        PriceBelief priceBelief,
+        decimal plantUtility,
+        string recommendation)
+    {
+        var trace = new List<DecisionTraceStep>();
+
+        AddIfPresent(
+            "day",
+            DecisionTraceKind.Evidence,
+            "Day and remaining season",
+            $"Day {scenario.Day}; {Math.Max(0, network.SeasonDays - scenario.Day)} days remain",
+            "Time determines whether the crop can reach its planned harvest.");
+
+        AddIfPresent(
+            "market",
+            DecisionTraceKind.Evidence,
+            "Current market quote",
+            $"{Math.Max(0m, scenario.CurrentPrice):0.##} coins",
+            "The current quote anchors the price estimate.");
+
+        AddIfPresent(
+            "opponent",
+            DecisionTraceKind.Evidence,
+            "Visible opponent crops",
+            $"{Math.Max(0, scenario.VisibleOpponentMatureCrops)} mature crops",
+            "Visible crops are evidence about future supply.");
+
+        AddIfPresent(
+            "care",
+            DecisionTraceKind.Evidence,
+            "Care feasibility",
+            $"{Clamp(scenario.CareSuccessProbability, 0m, 1m):P0} success assumption",
+            "Care risk changes the expected harvest.");
+
+        AddIfPresent(
+            "demand",
+            DecisionTraceKind.Belief,
+            "Active and future demand",
+            $"{Clamp(scenario.ActiveDemandSources, 0, 2)} active sources",
+            "Demand evidence can support a higher future price.");
+
+        AddIfPresent(
+            "supply",
+            DecisionTraceKind.Belief,
+            "Opponent supply before sale",
+            $"{priceBelief.LowProbability:P0} LOW-price pressure",
+            "Supply evidence changes the chance of a lower sale price.");
+
+        AddIfPresent(
+            "price",
+            DecisionTraceKind.Belief,
+            "Sale-price belief",
+            $"{priceBelief.ExpectedPrice:0.##} expected coins",
+            network.PricingApproach == PricingApproach.CarrotBeliefModel
+                ? "The belief combines the quote with coarse supply and demand evidence."
+                : "This first model uses the adjusted quote as a point estimate.");
+
+        AddIfPresent(
+            "plant",
+            DecisionTraceKind.Decision,
+            "Plant or PASS",
+            recommendation,
+            canReachHarvest
+                ? $"PLANT utility is {plantUtility:0.##}; PASS utility is {scenario.PassUtility:0.##}."
+                : "The timing constraint makes PASS the available recommendation.");
+
+        AddIfPresent(
+            "yield",
+            DecisionTraceKind.Outcome,
+            "Expected cared-for yield",
+            $"{expectedYield:0.##} units",
+            "Expected yield applies the care-success assumption to the planned harvest.");
+
+        AddIfPresent(
+            "utility",
+            DecisionTraceKind.Utility,
+            "Expected utility",
+            $"{plantUtility:0.##} PLANT vs {scenario.PassUtility:0.##} PASS",
+            "Utility compares the available actions on one transparent scale.");
+
+        return trace;
+
+        void AddIfPresent(
+            string nodeId,
+            DecisionTraceKind kind,
+            string label,
+            string value,
+            string explanation)
+        {
+            if (network.Nodes.Any(node => node.Id == nodeId))
+            {
+                trace.Add(new DecisionTraceStep(
+                    Order: trace.Count + 1,
+                    NodeId: nodeId,
+                    Kind: kind,
+                    Label: label,
+                    Value: value,
+                    Explanation: explanation));
+            }
+        }
     }
 
     private static decimal Clamp(decimal value, decimal minimum, decimal maximum)

@@ -7,6 +7,8 @@ public partial class Home
 {
     private string selectedNetworkId = NetworkCatalog.All[0].Id;
     private DecisionScenario currentScenario = CreateScenario(NetworkCatalog.All[0]);
+    private SimulationRun? simulation;
+    private int simulationSeed = 42;
     private bool DiagramExpanded { get; set; }
 
     private IReadOnlyList<DecisionNetworkDefinition> Networks => NetworkCatalog.All;
@@ -21,9 +23,49 @@ public partial class Home
 
     private ExperimentEvidenceSummary Evidence => EvidencePrototype.Carrot;
 
+    private SimulationRun? Simulation => simulation;
+
+    private int SimulationSeed
+    {
+        get => simulationSeed;
+        set => simulationSeed = value;
+    }
+
     private void ToggleDiagramExpanded()
     {
         DiagramExpanded = !DiagramExpanded;
+    }
+
+    private Task HandleScenarioChanged()
+    {
+        simulation = null;
+        return Task.CompletedTask;
+    }
+
+    private void ApplyPreset(string preset)
+    {
+        currentScenario = CreateScenario(CurrentNetwork);
+
+        switch (preset)
+        {
+            case "tight-season":
+                currentScenario.Day = Math.Max(0, CurrentNetwork.SeasonDays - CurrentNetwork.PlannedHarvestDay - 1);
+                break;
+            case "low-care":
+                currentScenario.CareSuccessProbability = 0.35m;
+                break;
+            case "supply-pressure":
+                currentScenario.VisibleOpponentMatureCrops = 6;
+                currentScenario.ActiveDemandSources = 0;
+                break;
+        }
+
+        simulation = null;
+    }
+
+    private void RunSimulation()
+    {
+        simulation = InteractiveSimulator.Run(CurrentNetwork, CurrentScenario, SimulationSeed);
     }
 
     private string SelectedNetworkId
@@ -38,6 +80,7 @@ public partial class Home
 
             selectedNetworkId = value;
             currentScenario = CreateScenario(CurrentNetwork);
+            simulation = null;
         }
     }
 

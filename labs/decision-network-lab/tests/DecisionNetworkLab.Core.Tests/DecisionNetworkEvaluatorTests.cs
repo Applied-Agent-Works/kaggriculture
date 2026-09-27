@@ -127,6 +127,47 @@ public sealed class DecisionNetworkEvaluatorTests
         StringAssert.Contains(result.Explanation.Last(), "PASS");
     }
 
+    [TestMethod]
+    public void EvaluationExposesActionsAndAcausalTraceForTheUi()
+    {
+        var network = NetworkCatalog.GetById("carrot");
+        var result = DecisionEvaluator.Evaluate(network, DefaultScenario(network));
+
+        Assert.HasCount(2, result.Actions);
+        Assert.AreEqual("PLANT", result.Actions.Single(action => action.IsRecommended).Action);
+        Assert.IsNotEmpty(result.Trace);
+        Assert.AreEqual("price", result.Trace.Single(step => step.NodeId == "price").NodeId);
+        Assert.AreEqual("utility", result.Trace.Last().NodeId);
+    }
+
+    [TestMethod]
+    public void InteractiveSimulationIsRepeatableForTheSameSeed()
+    {
+        var network = NetworkCatalog.GetById("carrot");
+        var scenario = DefaultScenario(network);
+
+        var first = InteractiveSimulator.Run(network, scenario, seed: 42);
+        var second = InteractiveSimulator.Run(network, scenario, seed: 42);
+
+        Assert.AreEqual(first.Outcome, second.Outcome);
+        Assert.AreEqual(first.FinalReward, second.FinalReward);
+        CollectionAssert.AreEqual(first.Steps.ToArray(), second.Steps.ToArray());
+    }
+
+    [TestMethod]
+    public void InteractiveSimulationFinishesWithPassWhenTheDecisionCannotReachHarvest()
+    {
+        var network = NetworkCatalog.GetById("melon");
+        var scenario = DefaultScenario(network);
+        scenario.Day = 20;
+
+        var run = InteractiveSimulator.Run(network, scenario, seed: 7);
+
+        Assert.AreEqual("PASS", run.Outcome);
+        Assert.AreEqual(scenario.PassUtility, run.FinalReward);
+        Assert.IsTrue(run.Steps.Any(step => step.Label == "Finished"));
+    }
+
     private static DecisionScenario DefaultScenario(DecisionNetworkDefinition network)
     {
         return new DecisionScenario

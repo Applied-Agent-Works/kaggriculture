@@ -29,7 +29,12 @@ The UI currently supports:
 6. reading a plain-language explanation of the recommendation;
 7. exploring an interactive SVG UML-style diagram with arrowed information
    flow, selectable nodes, and an optional full 16:9 view.
-8. reviewing a compact Phase 2 evidence prototype on the same screen, with
+8. using scenario presets and sliders to change assumptions without typing
+   every value;
+9. following a structured decision trace in the same evidence-to-decision
+   order as the UML diagram;
+10. running a seeded, narrow local simulator for immediate teaching feedback;
+11. reviewing a compact Phase 2 evidence prototype on the same screen, with
    paired-run summaries and a selectable trace preview.
 
 This first slice does not yet run the full Kaggriculture simulator, call the
@@ -133,15 +138,46 @@ Next after Phase 1 acceptance:
 - a clear distinction between observed results, model predictions, and later
   advisory commentary.
 
-The first Phase 2 UI should probably be an experiment-review view rather than
-an interactive simulator. It should help answer “what happened, under which
-controls, and what did the policy believe?” before we add live replay or
-parameter editing.
+The Phase 1.5 local simulator is deliberately narrower than the Python
+experiment runner. Phase 2 remains the experiment-review path for asking
+“what happened across a fixed seed suite, under which controls, and what did
+the policy believe?”
 
 The first evidence producer is documented in
 [evaluation/README.md](evaluation/README.md). It generates the manifest,
 run-summary, and compressed trace artifacts that a later read-only UI view can
 load.
+
+### Phase 1.5 — Interactive decision experience
+
+Status: implementation in progress.
+
+The goal of this phase is to make the first screen an interactive laboratory,
+not just a diagram with explanatory text.
+
+The first increment includes:
+
+- scenario presets and range controls;
+- structured action comparison values for `PLANT` and `PASS`;
+- a causal decision trace shared by the core evaluator and the UI;
+- a structured trace that follows the same evidence-to-decision order as the
+  SVG diagram;
+- a seeded local simulator for the three one-time crop examples;
+- explicit separation between immediate teaching feedback and authoritative
+  Python batch evidence.
+
+The local simulator is intentionally small. It does not replace the Python
+Kaggriculture simulator, and it does not promote its educational lifecycle
+assumptions into game rules. Its purpose is to let a learner change a value,
+run one reproducible scenario, and see the decision path and outcome.
+
+Remaining Phase 1.5 work:
+
+1. Browser-check the new controls, trace readability, and seeded run.
+2. Refine labels and density after interactive use.
+3. Add tests for edge cases discovered during browser review.
+4. Revisit trace-to-diagram selection as a focused UI follow-up.
+5. Keep the Python evidence-package importer as a separate Phase 2 boundary.
 
 ### Phase 3 — Crop-model refinement
 

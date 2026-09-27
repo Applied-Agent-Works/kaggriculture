@@ -1,0 +1,91 @@
+@using DecisionNetworkLab.Core
+
+<div class="scenario-controls">
+    <div class="preset-row" aria-label="Scenario presets">
+        <span class="preset-label">Try a preset</span>
+        <button type="button" class="secondary-button" @onclick="RequestDefault">Default</button>
+        <button type="button" class="secondary-button" @onclick="RequestTightSeason">Tight season</button>
+        <button type="button" class="secondary-button" @onclick="RequestLowCare">Low care</button>
+        @if (Network.PricingApproach == PricingApproach.CarrotBeliefModel)
+        {
+            <button type="button" class="secondary-button" @onclick="RequestSupplyPressure">Supply pressure</button>
+        }
+    </div>
+
+    <div class="field-grid">
+        <label class="field range-field">
+            <span>Day <output>@Scenario.Day</output></span>
+            <input type="range" min="0" max="29" step="1" @bind="Scenario.Day" @bind:after="NotifyChanged" />
+            <small>Move later in the season to test harvest timing.</small>
+        </label>
+
+        <label class="field range-field">
+            <span>Current price <output>@Scenario.CurrentPrice.ToString("0.##")</output></span>
+            <input type="range" min="0" max="@PriceMaximum" step="1" @bind="Scenario.CurrentPrice" @bind:after="NotifyChanged" />
+            <small>Drag the quote instead of typing a new number.</small>
+        </label>
+
+        <label class="field range-field">
+            <span>Future price multiplier <output>@Scenario.FuturePriceMultiplier.ToString("0.00")</output></span>
+            <input type="range" min="0" max="2" step="0.05" @bind="Scenario.FuturePriceMultiplier" @bind:after="NotifyChanged" />
+            <small>1.00 keeps the current quote unchanged.</small>
+        </label>
+
+        <label class="field range-field">
+            <span>Care success <output>@Scenario.CareSuccessProbability.ToString("P0")</output></span>
+            <input type="range" min="0" max="1" step="0.05" @bind="Scenario.CareSuccessProbability" @bind:after="NotifyChanged" />
+            <small>Lower the chance to see crop risk affect the decision.</small>
+        </label>
+
+        @if (Network.PricingApproach == PricingApproach.CarrotBeliefModel)
+        {
+            <label class="field range-field">
+                <span>Visible mature opponent crops <output>@Scenario.VisibleOpponentMatureCrops</output></span>
+                <input type="range" min="0" max="8" step="1" @bind="Scenario.VisibleOpponentMatureCrops" @bind:after="NotifyChanged" />
+                <small>More visible crops add supply pressure.</small>
+            </label>
+
+            <label class="field range-field">
+                <span>Active demand sources <output>@Scenario.ActiveDemandSources</output></span>
+                <input type="range" min="0" max="2" step="1" @bind="Scenario.ActiveDemandSources" @bind:after="NotifyChanged" />
+                <small>More demand sources support the price belief.</small>
+            </label>
+        }
+    </div>
+
+    <div class="fixed-facts">
+        <h3>Fixed game facts</h3>
+        <ul>
+            @foreach (var fact in Network.FixedFacts)
+            {
+                <li><span>@fact.Label</span><strong>@fact.Value</strong></li>
+            }
+        </ul>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public DecisionNetworkDefinition Network { get; set; } = default!;
+
+    [Parameter, EditorRequired]
+    public DecisionScenario Scenario { get; set; } = default!;
+
+    [Parameter]
+    public EventCallback Changed { get; set; }
+
+    [Parameter]
+    public EventCallback<string> PresetRequested { get; set; }
+
+    private int PriceMaximum => Network.CropCode == "MELON" ? 500 : 100;
+
+    private Task NotifyChanged() => Changed.InvokeAsync();
+
+    private Task RequestDefault() => PresetRequested.InvokeAsync("default");
+
+    private Task RequestTightSeason() => PresetRequested.InvokeAsync("tight-season");
+
+    private Task RequestLowCare() => PresetRequested.InvokeAsync("low-care");
+
+    private Task RequestSupplyPressure() => PresetRequested.InvokeAsync("supply-pressure");
+}

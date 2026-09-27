@@ -1,0 +1,115 @@
+@using DecisionNetworkLab.Core
+@using Microsoft.AspNetCore.Components.Web
+
+<section class="panel result-panel" aria-labelledby="result-title" aria-live="polite">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Evaluation</p>
+            <h2 id="result-title">Recommendation: @Result.Recommendation</h2>
+        </div>
+        <span class="recommendation recommendation-@Result.Recommendation.ToLowerInvariant()">@Result.Recommendation</span>
+    </div>
+
+    <div class="action-comparison" aria-label="Action comparison">
+        @foreach (var action in Result.Actions)
+        {
+            <div class="action-card @(action.IsRecommended ? "action-card-recommended" : string.Empty) @(action.IsAvailable ? string.Empty : "action-card-unavailable")">
+                <div class="action-card-heading">
+                    <span>@action.Action</span>
+                    @if (action.IsRecommended)
+                    {
+                        <strong>chosen</strong>
+                    }
+                </div>
+                <output>@action.Utility.ToString("0.##")</output>
+                <small>@(action.IsAvailable ? action.Explanation : "Not available in this time window.")</small>
+            </div>
+        }
+    </div>
+
+    <div class="evaluation-facts">
+        <div><span>Expected yield</span><strong>@Result.ExpectedYield.ToString("0.##")</strong></div>
+        <div><span>Expected price</span><strong>@Result.PriceBelief.ExpectedPrice.ToString("0.##")</strong></div>
+    </div>
+
+    <div class="trace-heading">
+        <div>
+            <h3>Decision trace</h3>
+            <p class="help-text">The trace follows the same evidence-to-decision order as the diagram.</p>
+        </div>
+    </div>
+
+    <ol class="decision-trace">
+        @foreach (var step in Result.Trace)
+        {
+            <li class="decision-trace-step">
+                <span class="trace-step-number">@step.Order</span>
+                <div>
+                    <div class="trace-step-heading"><strong>@step.Label</strong><span>@step.Value</span></div>
+                    <p>@step.Explanation</p>
+                </div>
+            </li>
+        }
+    </ol>
+
+    <div class="simulation-launch">
+        <div>
+            <h3>Run the local simulator</h3>
+            <p class="help-text">This is a seeded teaching run, separate from the Python batch evaluator.</p>
+        </div>
+        <div class="simulation-controls">
+            <label class="seed-field">
+                <span>Seed</span>
+                <input type="number" value="@Seed" @onchange="HandleSeedChanged" />
+            </label>
+            <button type="button" class="primary-button" @onclick="RunSimulation">Run simulation</button>
+        </div>
+    </div>
+
+    @if (Simulation is not null)
+    {
+        <div class="simulation-result">
+            <div class="simulation-result-heading">
+                <div>
+                    <p class="eyebrow">Seeded run @Simulation.Seed</p>
+                    <h3>@Simulation.Outcome</h3>
+                </div>
+                <strong>@Simulation.FinalReward.ToString("0.##") reward</strong>
+            </div>
+            <ol class="simulation-steps">
+                @foreach (var step in Simulation.Steps)
+                {
+                    <li>
+                        <span>@step.Order</span>
+                        <div><strong>@step.Label</strong><p>@step.Detail</p></div>
+                    </li>
+                }
+            </ol>
+        </div>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired]
+    public DecisionResult Result { get; set; } = default!;
+
+    [Parameter]
+    public SimulationRun? Simulation { get; set; }
+
+    [Parameter]
+    public int Seed { get; set; }
+
+    [Parameter]
+    public EventCallback<int> SeedChanged { get; set; }
+
+    [Parameter]
+    public EventCallback RunSimulation { get; set; }
+
+    private Task HandleSeedChanged(ChangeEventArgs args)
+    {
+        return int.TryParse(args.Value?.ToString(), out var seed)
+            ? SeedChanged.InvokeAsync(seed)
+            : Task.CompletedTask;
+    }
+
+}

@@ -116,6 +116,20 @@ questions are not failures; they show where the next investigation belongs.
   read-only experiment-review screen before choosing a server boundary.
 - Status: Open
 
+### Q-010 — Is the Phase 1.5 browser simulator authoritative?
+
+- Asked: 2026-09-27
+- Question: Should the new browser-local simulator replace the Python
+  Kaggriculture simulator for evaluation?
+- Answer: No. It is a seeded educational simulator for immediate feedback on
+  the three one-time crop examples. The Python simulator remains authoritative
+  for batch matches, lifecycle evidence, and contest-facing validation.
+- Evidence: ADR-012 and the Phase 1.5 boundary in `README.md`.
+- Answered: 2026-09-27
+- Follow-up: Compare any policy change against fixed Python runs before
+  treating it as an improvement.
+- Status: Answered
+
 ### Q-006 — Can the lab be reconstructed on another machine?
 
 - Asked: 2026-09-27

@@ -113,4 +113,15 @@ public sealed record DecisionResult(
     decimal PlantUtility,
     decimal PassUtility,
     string Recommendation,
-    IReadOnlyList<string> Explanation);
+    IReadOnlyList<string> Explanation)
+{
+    /// <summary>
+    /// The two actions shown by the evaluation panel.
+    /// </summary>
+    public IReadOnlyList<DecisionActionValue> Actions { get; init; } = Array.Empty<DecisionActionValue>();
+
+    /// <summary>
+    /// The compact causal path used by the interactive UI.
+    /// </summary>
+    public IReadOnlyList<DecisionTraceStep> Trace { get; init; } = Array.Empty<DecisionTraceStep>();
+}

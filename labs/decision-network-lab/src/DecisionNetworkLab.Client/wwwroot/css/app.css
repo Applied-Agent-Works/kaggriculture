@@ -185,6 +185,12 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
     font-weight: 700;
 }
 
+.field > span output {
+    color: #f0c36a;
+    float: right;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
 .field input, .field select {
     background: #0f1b25;
     border: 1px solid #496272;
@@ -193,6 +199,57 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
     min-height: 2.4rem;
     padding: 0.45rem 0.6rem;
     width: 100%;
+}
+
+.range-field input[type="range"] {
+    accent-color: #4fa3ca;
+    background: transparent;
+    border: 0;
+    min-height: 1.4rem;
+    padding: 0;
+}
+
+.preset-row {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1.15rem 0 0.4rem;
+}
+
+.preset-label {
+    color: #9eb2bf;
+    font-size: 0.78rem;
+    margin-right: 0.25rem;
+}
+
+.secondary-button,
+.primary-button {
+    border-radius: 0.4rem;
+    cursor: pointer;
+    font-size: 0.78rem;
+    padding: 0.45rem 0.65rem;
+}
+
+.secondary-button {
+    background: #1d3443;
+    border: 1px solid #496d80;
+    color: #d7edf6;
+}
+
+.secondary-button:hover {
+    background: #274b60;
+}
+
+.primary-button {
+    background: #2d7256;
+    border: 1px solid #72bc91;
+    color: #e4f9eb;
+    font-weight: 700;
+}
+
+.primary-button:hover {
+    background: #398263;
 }
 
 .compact-field {
@@ -665,6 +722,236 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
 .evidence-footer {
     border-top: 1px solid #2d4555;
     padding-top: 0.8rem;
+}
+
+.action-comparison,
+.evaluation-facts {
+    display: grid;
+    gap: 0.65rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 1.1rem 0;
+}
+
+.action-card,
+.evaluation-facts div {
+    background: #0f1b25;
+    border: 1px solid #263c4b;
+    border-radius: 0.55rem;
+    padding: 0.75rem;
+}
+
+.action-card-recommended {
+    border-color: #62a871;
+    box-shadow: inset 0 0 0 1px rgba(98, 168, 113, 0.25);
+}
+
+.action-card-unavailable {
+    opacity: 0.62;
+}
+
+.action-card-heading,
+.trace-step-heading,
+.simulation-result-heading {
+    align-items: baseline;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: space-between;
+}
+
+.action-card-heading span {
+    color: #d9edf4;
+    font-weight: 700;
+}
+
+.action-card-heading strong {
+    color: #9de0aa;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+
+.action-card output {
+    color: #f0f7fa;
+    display: block;
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0.4rem 0;
+}
+
+.action-card small {
+    display: block;
+}
+
+.evaluation-facts {
+    margin: 0 0 1.1rem;
+}
+
+.evaluation-facts span,
+.evaluation-facts strong {
+    display: block;
+}
+
+.evaluation-facts span {
+    color: #9eb2bf;
+    font-size: 0.75rem;
+}
+
+.evaluation-facts strong {
+    color: #e9f4f7;
+    font-size: 1.15rem;
+    margin-top: 0.25rem;
+}
+
+.trace-heading {
+    border-top: 1px solid #2d4555;
+    padding-top: 1rem;
+}
+
+.trace-heading h3 {
+    margin-bottom: 0.2rem;
+}
+
+.decision-trace,
+.simulation-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.decision-trace {
+    display: grid;
+    gap: 0.35rem;
+    margin-top: 0.75rem;
+}
+
+.decision-trace-step {
+    align-items: start;
+    background: #10202b;
+    border: 1px solid transparent;
+    border-radius: 0.45rem;
+    display: grid;
+    gap: 0.6rem;
+    grid-template-columns: 1.4rem 1fr;
+    padding: 0.5rem;
+}
+
+.trace-step-number {
+    align-items: center;
+    background: #24465d;
+    border-radius: 50%;
+    color: #d7edf6;
+    display: flex;
+    font-size: 0.7rem;
+    height: 1.35rem;
+    justify-content: center;
+    width: 1.35rem;
+}
+
+.trace-step-heading strong {
+    color: #d9edf4;
+    font-size: 0.82rem;
+}
+
+.trace-step-heading span {
+    color: #f0c36a;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 0.75rem;
+    text-align: right;
+}
+
+.decision-trace-step p {
+    color: #9eb2bf;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    margin: 0.25rem 0 0;
+}
+
+.simulation-launch {
+    align-items: end;
+    border-top: 1px solid #2d4555;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding-top: 1rem;
+}
+
+.simulation-launch h3 {
+    margin-bottom: 0.2rem;
+}
+
+.simulation-controls {
+    align-items: end;
+    display: flex;
+    gap: 0.6rem;
+}
+
+.seed-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.seed-field span {
+    color: #9eb2bf;
+    font-size: 0.72rem;
+}
+
+.seed-field input {
+    background: #0f1b25;
+    border: 1px solid #496272;
+    border-radius: 0.35rem;
+    color: #edf5f8;
+    min-height: 2.2rem;
+    padding: 0.35rem 0.5rem;
+    width: 5.5rem;
+}
+
+.simulation-result {
+    background: #0f1b25;
+    border: 1px solid #496272;
+    border-radius: 0.55rem;
+    margin-top: 1rem;
+    padding: 0.85rem;
+}
+
+.simulation-result-heading h3 {
+    color: #b9efc7;
+    margin-bottom: 0;
+}
+
+.simulation-result-heading > strong {
+    color: #f0c36a;
+    font-size: 1.1rem;
+}
+
+.simulation-steps {
+    border-top: 1px solid #263c4b;
+    margin-top: 0.75rem;
+    padding-top: 0.45rem;
+}
+
+.simulation-steps li {
+    display: grid;
+    gap: 0.6rem;
+    grid-template-columns: 1.2rem 1fr;
+    padding: 0.45rem 0;
+}
+
+.simulation-steps li > span {
+    color: #d8b768;
+    font-size: 0.75rem;
+}
+
+.simulation-steps strong {
+    color: #d9edf4;
+    font-size: 0.8rem;
+}
+
+.simulation-steps p {
+    color: #9eb2bf;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    margin: 0.15rem 0 0;
 }
 
 @media (max-width: 900px) {

@@ -213,3 +213,48 @@ changes should add a decision rather than silently rewriting an old one.
 - Evidence: `ExperimentEvidencePrototype.razor` and the Phase 2 section in
   `README.md`.
 - Supersedes: None.
+
+## ADR-012 — Use a narrow local simulator for Phase 1.5 feedback
+
+- Date: 2026-09-27
+- Status: Accepted
+- Context: The first screen currently recalculates utility when a learner
+  changes a number, but it does not show a causal trace or an outcome from a
+  reproducible run. The full Kaggriculture Python simulator cannot run inside
+  the Blazor WebAssembly client without adding a server or a separate runtime.
+- Decision: Add a small deterministic C# simulator for the three existing
+  one-time crop examples. It consumes the same core evaluation result as the
+  UI, returns visible lifecycle steps, and uses an explicit seed. Keep the
+  Python Kaggriculture simulator as the authority for batch matches and
+  evidence packages.
+- Alternatives considered: Launch Python from a server API immediately; try
+  to compile the full Python simulator into the browser; keep the screen
+  description-only; make the browser simulator authoritative for game rules.
+- Consequences: The learner gets immediate local feedback without cloud or
+  server dependencies. The local simulator must remain visibly educational,
+  and its assumptions must not be copied into `main.py` without matched
+  Python evidence.
+- Evidence: `InteractiveSimulator.cs`, `DecisionTraceModels.cs`, and the
+  Phase 1.5 section in `README.md`.
+- Supersedes: ADR-010 only for immediate interactive teaching feedback;
+  ADR-010 remains the evidence-package boundary.
+
+## ADR-013 — Share structured decision traces between core and UI
+
+- Date: 2026-09-27
+- Status: Accepted
+- Context: The first UI displayed long explanation strings and could not show
+  which network values changed after an input was adjusted.
+- Decision: The core evaluator returns named action values and ordered trace
+  steps containing node IDs, roles, values, and explanations. The client
+  renders those records in the same evidence-to-decision order as the SVG
+  diagram. The SVG remains directly selectable through its own interaction.
+- Alternatives considered: Recompute explanations in Razor components;
+  attach behavior directly to SVG nodes; keep only a list of prose strings.
+- Consequences: Core calculations remain independent of Blazor while the UI
+  can become more interactive. Trace wording and node IDs are now part of the
+  small local contract and should be tested when the graph changes. A later UI
+  increment may connect trace selection to SVG selection.
+- Evidence: `DecisionResult`, `DecisionTraceModels.cs`, and
+  `InteractiveEvaluationPanel.razor`.
+- Supersedes: None.
