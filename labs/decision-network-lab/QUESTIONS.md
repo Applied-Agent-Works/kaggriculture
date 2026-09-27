@@ -130,6 +130,21 @@ questions are not failures; they show where the next investigation belongs.
   treating it as an improvement.
 - Status: Answered
 
+### Q-011 — Which later phase owns the deferred backlog?
+
+- Asked: 2026-09-27
+- Question: Should the new carrot graph, full Python evidence importing,
+  browser-to-Python simulation, formal sensitivity sweeps, and carrot
+  graph/evaluator alignment be assigned to Phase 2, Phase 3, or separate
+  phases?
+- Answer: Not assigned yet. Keep these as a phase-unassigned backlog until
+  the new carrot graph and the evidence architecture are available for a
+  deliberate boundary decision.
+- Evidence: The deferred backlog in `README.md` and the current architecture
+  separation between the lab, Python simulator, and live agent.
+- Owner or next step: Revisit when the new carrot graph is provided.
+- Status: Open
+
 ### Q-006 — Can the lab be reconstructed on another machine?
 
 - Asked: 2026-09-27

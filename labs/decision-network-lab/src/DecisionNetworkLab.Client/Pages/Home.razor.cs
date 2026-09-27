@@ -9,11 +9,6 @@ public partial class Home
     private DecisionScenario currentScenario = CreateScenario(NetworkCatalog.All[0]);
     private SimulationRun? simulation;
     private int simulationSeed = 42;
-    private bool DiagramExpanded { get; set; }
-
-    private string DiagramPanelClass =>
-        DiagramExpanded ? "network-panel network-panel-expanded" : "network-panel";
-
     private IReadOnlyList<DecisionNetworkDefinition> Networks => NetworkCatalog.All;
 
     private DecisionNetworkDefinition CurrentNetwork =>
@@ -32,11 +27,6 @@ public partial class Home
     {
         get => simulationSeed;
         set => simulationSeed = value;
-    }
-
-    private void ToggleDiagramExpanded()
-    {
-        DiagramExpanded = !DiagramExpanded;
     }
 
     private Task HandleScenarioChanged()

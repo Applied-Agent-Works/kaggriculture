@@ -30,6 +30,9 @@ public sealed class DecisionNetworkEvaluatorTests
             Assert.IsNotEmpty(network.Edges, network.Name);
             Assert.IsNotEmpty(network.FixedFacts, network.Name);
             Assert.IsNotEmpty(network.Parameters, network.Name);
+            Assert.IsFalse(
+                network.Nodes.Any(node => string.IsNullOrWhiteSpace(node.PressurePoint)),
+                $"Missing pressure-point guidance in {network.Name}.");
 
             foreach (var edge in network.Edges)
             {

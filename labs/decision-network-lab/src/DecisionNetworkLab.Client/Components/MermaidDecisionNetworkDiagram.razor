@@ -1,0 +1,58 @@
+@using DecisionNetworkLab.Core
+
+<div class="mermaid-diagram-shell">
+    <div @ref="diagramHost"
+         class="mermaid-diagram-host"
+         aria-label="@Network.Name decision network"></div>
+
+    <aside class="mermaid-node-details @(SelectedNode is null ? "mermaid-node-empty" : string.Empty)" aria-live="polite">
+        @if (SelectedNode is not null)
+        {
+            <p class="eyebrow">Selected node</p>
+            <h3>@SelectedNode.Label</h3>
+            <p><strong>Type:</strong> @SelectedNode.Kind</p>
+            <p><strong>Current value:</strong> @SelectedNodeValue</p>
+            <p><strong>Pressure point:</strong> @SelectedNode.PressurePoint</p>
+            <p>@SelectedNode.Description</p>
+
+            <div class="mermaid-node-relationships">
+                <div>
+                    <strong>Feeds this node</strong>
+                    @if (UpstreamEdges.Count == 0)
+                    {
+                        <span>None</span>
+                    }
+                    else
+                    {
+                        <ul class="mermaid-relationship-list">
+                            @foreach (var edge in UpstreamEdges)
+                            {
+                                <li><strong>@NodeLabel(edge.FromNodeId)</strong><span>@edge.Description</span></li>
+                            }
+                        </ul>
+                    }
+                </div>
+                <div>
+                    <strong>Affects</strong>
+                    @if (DownstreamEdges.Count == 0)
+                    {
+                        <span>None</span>
+                    }
+                    else
+                    {
+                        <ul class="mermaid-relationship-list">
+                            @foreach (var edge in DownstreamEdges)
+                            {
+                                <li><strong>@NodeLabel(edge.ToNodeId)</strong><span>@edge.Description</span></li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <p class="uml-help-text">Select a node to see its current value, causes, and effects.</p>
+        }
+    </aside>
+</div>

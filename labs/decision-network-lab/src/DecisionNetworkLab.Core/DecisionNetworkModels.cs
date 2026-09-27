@@ -31,7 +31,8 @@ public sealed record NetworkNode(
     string Id,
     string Label,
     NetworkNodeKind Kind,
-    string Description);
+    string Description,
+    string PressurePoint = "No pressure point documented yet.");
 
 /// <summary>
 /// An arrow explains which node supplies information to another node.

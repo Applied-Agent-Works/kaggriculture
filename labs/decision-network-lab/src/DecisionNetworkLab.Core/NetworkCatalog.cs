@@ -33,15 +33,15 @@ public static class NetworkCatalog
             PricingApproach: PricingApproach.CarrotBeliefModel,
             Nodes: new[]
             {
-                new NetworkNode("day", "Day and remaining season", NetworkNodeKind.Evidence, "How much time remains for planting, care, harvest, and sale?"),
-                new NetworkNode("market", "Current market quote", NetworkNodeKind.Evidence, "The public carrot price at the time of the decision."),
-                new NetworkNode("opponent", "Visible opponent crops", NetworkNodeKind.Evidence, "Public crop evidence that may predict future supply."),
-                new NetworkNode("demand", "Active and future demand", NetworkNodeKind.Chance, "Known shops and a small future-demand assumption."),
-                new NetworkNode("supply", "Opponent supply before sale", NetworkNodeKind.Chance, "A belief about whether the opponent will add supply."),
-                new NetworkNode("price", "Sale-price belief", NetworkNodeKind.Chance, "LOW, NORMAL, and HIGH price categories."),
-                new NetworkNode("plant", "Plant carrot or PASS", NetworkNodeKind.Decision, "The explicit action comparison."),
-                new NetworkNode("yield", "Expected cared-for yield", NetworkNodeKind.Outcome, "The expected harvest after care risk is considered."),
-                new NetworkNode("utility", "Expected utility", NetworkNodeKind.Utility, "Expected sale value minus seed opportunity value.")
+                new NetworkNode("day", "Day and remaining season", NetworkNodeKind.Evidence, "How much time remains for planting, care, harvest, and sale?", "Hard timing gate: once the harvest no longer fits, planting becomes unavailable."),
+                new NetworkNode("market", "Current market quote", NetworkNodeKind.Evidence, "The public carrot price at the time of the decision.", "Price anchor: the quote shifts the sale-price belief and utility."),
+                new NetworkNode("opponent", "Visible opponent crops", NetworkNodeKind.Evidence, "Public crop evidence that may predict future supply.", "Supply evidence: more mature opponent crops increase LOW-price pressure."),
+                new NetworkNode("demand", "Active and future demand", NetworkNodeKind.Chance, "Known shops and a small future-demand assumption.", "Small demand lever: the current coarse model adjusts HIGH-price pressure modestly."),
+                new NetworkNode("supply", "Opponent supply before sale", NetworkNodeKind.Chance, "A belief about whether the opponent will add supply.", "Belief conversion point: evidence becomes a price-pressure probability here."),
+                new NetworkNode("price", "Sale-price belief", NetworkNodeKind.Chance, "LOW, NORMAL, and HIGH price categories.", "High-leverage bridge: expected price multiplies expected yield before utility."),
+                new NetworkNode("plant", "Plant carrot or PASS", NetworkNodeKind.Decision, "The explicit action comparison.", "Decision boundary: PLANT must beat PASS and satisfy the harvest horizon."),
+                new NetworkNode("yield", "Expected cared-for yield", NetworkNodeKind.Outcome, "The expected harvest after care risk is considered.", "Hidden pressure point: care success changes yield value even though carrot lacks a care node in this graph."),
+                new NetworkNode("utility", "Expected utility", NetworkNodeKind.Utility, "Expected sale value minus seed opportunity value.", "Final economic pressure point: small changes here can flip PLANT/PASS.")
             },
             Edges: new[]
             {
@@ -122,13 +122,13 @@ public static class NetworkCatalog
             PricingApproach: PricingApproach.PointEstimate,
             Nodes: new[]
             {
-                new NetworkNode("day", "Day and remaining season", NetworkNodeKind.Evidence, "How much time remains before the season ends?"),
-                new NetworkNode("market", "Current market quote", NetworkNodeKind.Evidence, "Today's public crop price is the first estimate of the sale quote."),
-                new NetworkNode("care", "Care feasibility", NetworkNodeKind.Evidence, "The learner states how likely the planned care is to succeed."),
-                new NetworkNode("price", "Future sale-price estimate", NetworkNodeKind.Chance, shopDescription),
-                new NetworkNode("plant", $"Plant {name} or PASS", NetworkNodeKind.Decision, "The explicit action comparison."),
-                new NetworkNode("yield", "Expected cared-for yield", NetworkNodeKind.Outcome, "The planned harvest adjusted by care success."),
-                new NetworkNode("utility", "Expected utility", NetworkNodeKind.Utility, "Expected sale value minus seed opportunity value.")
+                new NetworkNode("day", "Day and remaining season", NetworkNodeKind.Evidence, "How much time remains before the season ends?", "Hard timing gate: late planting can make the harvest unreachable."),
+                new NetworkNode("market", "Current market quote", NetworkNodeKind.Evidence, "Today's public crop price is the first estimate of the sale quote.", "Price anchor: today's quote directly sets the first sale-price estimate."),
+                new NetworkNode("care", "Care feasibility", NetworkNodeKind.Evidence, "The learner states how likely the planned care is to succeed.", "Yield lever: lower care success reduces expected harvest value."),
+                new NetworkNode("price", "Future sale-price estimate", NetworkNodeKind.Chance, shopDescription, "Model simplification: this version uses a point estimate rather than a price distribution."),
+                new NetworkNode("plant", $"Plant {name} or PASS", NetworkNodeKind.Decision, "The explicit action comparison.", "Decision boundary: planting wins only when utility beats PASS and timing is feasible."),
+                new NetworkNode("yield", "Expected cared-for yield", NetworkNodeKind.Outcome, "The planned harvest adjusted by care success.", "Care-to-value bridge: expected yield multiplies the sale-price estimate."),
+                new NetworkNode("utility", "Expected utility", NetworkNodeKind.Utility, "Expected sale value minus seed opportunity value.", "Economic pressure point: revenue, care, and seed cost meet here.")
             },
             Edges: new[]
             {

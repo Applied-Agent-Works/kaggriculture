@@ -19,6 +19,7 @@ changes should add a decision rather than silently rewriting an old one.
 | ADR-010 | Exchange Phase 2 evidence through frozen local packages | Accepted | 2026-09-27 |
 | ADR-011 | Prototype evidence review inside the existing client screen | Accepted | 2026-09-27 |
 | ADR-014 | Use Fluent UI for general presentation controls | Accepted | 2026-09-27 |
+| ADR-015 | Use Mermaid for the interactive network SVG | Accepted | 2026-09-27 |
 
 ## ADR-001 — Keep the first experience in its own lab
 
@@ -280,3 +281,27 @@ changes should add a decision rather than silently rewriting an old one.
   and the Fluent migration in the Phase 1.5 client components.
 - Supersedes: The presentation portion of ADR-004; the dependency-minimizing
   boundary remains in force for the core and simulator.
+
+## ADR-015 — Use Mermaid for the interactive network SVG
+
+- Date: 2026-09-27
+- Status: Accepted
+- Context: The network diagram should be derived from a readable Mermaid
+  topology and remain interactive in the Blazor experience. The previous
+  renderer duplicated layout decisions in C# and SVG markup.
+- Decision: Generate Mermaid flowchart text from the core network definition,
+  render it in the browser with the pinned Mermaid 12.0.0 ESM module from
+  jsDelivr, and bridge trusted node-click callbacks through JavaScript
+  interop. Keep the C# model as the source of truth and keep the live
+  Kaggriculture agent independent of this browser dependency.
+- Alternatives considered: Continue maintaining hand-positioned SVG; use the
+  Mermaid CLI to produce static SVG files; add a separate graph visualization
+  framework.
+- Consequences: Mermaid owns layout and SVG generation while Blazor owns
+  selected-node state and explanations. The lab currently has a versioned CDN
+  runtime dependency; if offline reconstruction becomes a requirement, vendor
+  the pinned module or move rendering to a build step.
+- Evidence: `MermaidDefinitionBuilder.cs`,
+  `MermaidDecisionNetworkDiagram.razor`, and `wwwroot/js/mermaid-interop.js`.
+- Supersedes: The diagram-rendering portion of ADR-006; the custom SVG
+  interaction boundary is replaced by Mermaid plus JS interop.

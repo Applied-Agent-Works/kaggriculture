@@ -62,31 +62,26 @@ fluent-select, fluent-slider, fluent-number-input { display: block; width: 100%;
 
 .section-heading { align-items: start; display: flex; gap: 1rem; justify-content: space-between; margin-bottom: 1rem; }
 .section-heading h2 { margin-bottom: 0; }
-.diagram-actions { align-items: end; display: flex; flex-direction: column; gap: 0.55rem; }
-
-.network-panel-expanded { border-radius: 0; inset: 0; margin: 0; overflow: auto; position: fixed; z-index: 20; }
-.network-panel-expanded .uml-diagram-shell { display: flex; flex-direction: column; min-height: calc(100vh - 8rem); }
-.network-panel-expanded .uml-diagram { flex: 1; width: 100%; }
-
-.uml-diagram-shell { margin-top: 1.25rem; }
-.uml-diagram { background: #17191b; border: 1px solid #30363a; border-radius: 0.65rem; display: block; aspect-ratio: 16 / 9; height: auto; margin: 0 auto; max-width: 100%; overflow: visible; width: 50%; }
-.uml-edge { fill: none; marker-end: url("#uml-arrow"); stroke: #2f91bc; stroke-width: 2.2; }
-#uml-arrow path { fill: #2f91bc; }
-.uml-node { cursor: pointer; outline: none; }
-.uml-shape { fill: #17191b; stroke: #2f91bc; stroke-width: 1.6; }
-.uml-node:hover .uml-shape, .uml-node:focus .uml-shape, .uml-node-selected .uml-shape { stroke: #f0c36a; stroke-width: 3; }
-.uml-node text { pointer-events: none; }
-.uml-kind { fill: #b2c6d0; font-size: 9px; font-weight: 700; letter-spacing: 1px; }
-.uml-label { fill: #e5e7e9; font-size: 16px; font-weight: 700; }
-.uml-description { fill: #c5c9cd; font-size: 12px; }
-.uml-node-evidence .uml-shape { stroke: #2f91bc; }
-.uml-node-chance .uml-shape { stroke: #2f91bc; }
-.uml-node-decision .uml-shape { stroke: #62a871; }
-.uml-node-outcome .uml-shape { stroke: #9f78be; }
-.uml-node-utility .uml-shape { stroke: #c57267; }
-.uml-node-details { background: #0f1b25; border: 1px solid #496272; border-left: 4px solid #f0c36a; border-radius: 0.55rem; margin-top: 0.85rem; padding: 0.8rem 1rem; }
-.uml-node-details h3 { margin-bottom: 0.35rem; }
-.uml-node-details p { color: #c3d0d7; margin-bottom: 0.35rem; }
+.mermaid-diagram-shell { display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1fr) minmax(230px, 0.32fr); margin-top: 1.25rem; }
+.mermaid-diagram-host { background: #17191b; border: 1px solid #30363a; border-radius: 0.65rem; display: grid; min-height: 28rem; overflow: auto; padding: 1rem; place-items: center; }
+.mermaid-diagram-host svg { display: block; height: auto; max-width: 100%; }
+.mermaid-diagram-host .node { cursor: pointer; outline: none; }
+.mermaid-diagram-host .node:focus rect, .mermaid-diagram-host .node:focus polygon, .mermaid-diagram-host .node:focus circle, .mermaid-diagram-host .node:hover rect, .mermaid-diagram-host .node:hover polygon, .mermaid-diagram-host .node:hover circle { filter: drop-shadow(0 0 7px rgba(240, 195, 106, 0.7)); }
+.mermaid-diagram-host .node.mermaid-node-path rect, .mermaid-diagram-host .node.mermaid-node-path polygon, .mermaid-diagram-host .node.mermaid-node-path circle, .mermaid-diagram-host .node.mermaid-node-path path { filter: drop-shadow(0 0 6px rgba(95, 164, 201, 0.65)); }
+.mermaid-diagram-host .node.mermaid-node-selected rect, .mermaid-diagram-host .node.mermaid-node-selected polygon, .mermaid-diagram-host .node.mermaid-node-selected circle, .mermaid-diagram-host .node.mermaid-node-selected path { filter: drop-shadow(0 0 8px rgba(240, 195, 106, 0.9)); stroke: #f0c36a !important; stroke-width: 3 !important; }
+.mermaid-node-value { font-size: 0.78em; }
+.mermaid-node-details { align-self: stretch; background: #0f1b25; border: 1px solid #496272; border-left: 4px solid #f0c36a; border-radius: 0.55rem; padding: 0.8rem 1rem; }
+.mermaid-node-empty { align-items: center; display: flex; }
+.mermaid-node-details h3 { margin-bottom: 0.35rem; }
+.mermaid-node-details p { color: #c3d0d7; margin-bottom: 0.35rem; }
+.mermaid-node-relationships { border-top: 1px solid #2d4555; display: grid; gap: 0.75rem; grid-template-columns: 1fr; margin-top: 0.8rem; padding-top: 0.8rem; }
+.mermaid-node-relationships > div > strong { color: #b7d7e5; display: block; font-size: 0.78rem; }
+.mermaid-relationship-list { list-style: none; margin: 0.35rem 0 0; padding: 0; }
+.mermaid-relationship-list li { border-top: 1px solid #263c4b; padding: 0.35rem 0; }
+.mermaid-relationship-list li strong, .mermaid-relationship-list li span { display: block; }
+.mermaid-relationship-list li strong { color: #d9edf4; font-size: 0.78rem; }
+.mermaid-relationship-list li span { color: #9eb2bf; font-size: 0.78rem; line-height: 1.4; margin-top: 0.15rem; }
+.mermaidTooltip { background: #0f1b25 !important; border: 1px solid #496272 !important; border-radius: 0.35rem; color: #e7edf2 !important; padding: 0.45rem 0.6rem; }
 .uml-help-text { color: #9eb2bf; margin: 0.75rem 0 0; }
 
 .scenario-controls { margin-top: 1rem; }
@@ -176,9 +171,8 @@ fluent-select, fluent-slider, fluent-number-input { display: block; width: 100%;
 #blazor-error-ui .dismiss { cursor: pointer; position: absolute; right: 0.75rem; top: 0.5rem; }
 
 @media (max-width: 900px) {
-    .evidence-review-grid, .workspace-grid { grid-template-columns: 1fr; }
+    .evidence-review-grid, .workspace-grid, .mermaid-diagram-shell { grid-template-columns: 1fr; }
     .evidence-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .uml-diagram { width: 100%; }
 }
 
 @media (max-width: 560px) {
