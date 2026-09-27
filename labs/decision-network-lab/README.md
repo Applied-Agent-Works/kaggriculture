@@ -42,6 +42,10 @@ Python agents, call Foundry, persist experiment results, or use a server API.
 The evidence panel currently uses a frozen in-memory fixture based on the first
 local carrot package; it is not yet the package importer.
 
+The presentation layer uses the approved `Microsoft.FluentUI.AspNetCore.Components`
+package for cards, controls, buttons, and providers. The decision-network SVG
+and the teaching-specific layout remain local components and CSS.
+
 ## Roadmap and phase status
 
 The lab is intentionally being built in layers. The lab experience is a
@@ -163,6 +167,7 @@ The first increment includes:
 - a structured trace that follows the same evidence-to-decision order as the
   SVG diagram;
 - a seeded local simulator for the three one-time crop examples;
+- Fluent UI presentation controls with the existing dark visual language;
 - explicit separation between immediate teaching feedback and authoritative
   Python batch evidence.
 
@@ -173,7 +178,8 @@ run one reproducible scenario, and see the decision path and outcome.
 
 Remaining Phase 1.5 work:
 
-1. Browser-check the new controls, trace readability, and seeded run.
+1. Browser-check complete for Fluent controls, trace readability, and seeded
+   run.
 2. Refine labels and density after interactive use.
 3. Add tests for edge cases discovered during browser review.
 4. Revisit trace-to-diagram selection as a focused UI follow-up.
@@ -206,9 +212,9 @@ From this directory:
 dotnet run --project src/DecisionNetworkLab.Client/DecisionNetworkLab.Client.csproj
 ```
 
-The first build may restore the Microsoft Blazor framework packages declared
-by the generated WebAssembly project. No third-party UI component library or
-external service package is used by this lab.
+The first build may restore the Microsoft Blazor framework packages and the
+approved Fluent UI Blazor package declared by the WebAssembly project. No
+external service or JavaScript UI framework is used by this lab.
 
 ## Reconstruct on a new machine
 

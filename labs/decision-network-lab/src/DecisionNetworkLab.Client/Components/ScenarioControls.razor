@@ -3,37 +3,37 @@
 <div class="scenario-controls">
     <div class="preset-row" aria-label="Scenario presets">
         <span class="preset-label">Try a preset</span>
-        <button type="button" class="secondary-button" @onclick="RequestDefault">Default</button>
-        <button type="button" class="secondary-button" @onclick="RequestTightSeason">Tight season</button>
-        <button type="button" class="secondary-button" @onclick="RequestLowCare">Low care</button>
+        <FluentButton Appearance="ButtonAppearance.Outline" @onclick="RequestDefault">Default</FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Outline" @onclick="RequestTightSeason">Tight season</FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Outline" @onclick="RequestLowCare">Low care</FluentButton>
         @if (Network.PricingApproach == PricingApproach.CarrotBeliefModel)
         {
-            <button type="button" class="secondary-button" @onclick="RequestSupplyPressure">Supply pressure</button>
+            <FluentButton Appearance="ButtonAppearance.Outline" @onclick="RequestSupplyPressure">Supply pressure</FluentButton>
         }
     </div>
 
     <div class="field-grid">
         <label class="field range-field">
             <span>Day <output>@Scenario.Day</output></span>
-            <input type="range" min="0" max="29" step="1" @bind="Scenario.Day" @bind:after="NotifyChanged" />
+            <FluentSlider TValue="int" Min="0" Max="29" Step="1" Width="100%" @bind-Value="Scenario.Day" @bind-Value:after="NotifyChanged" />
             <small>Move later in the season to test harvest timing.</small>
         </label>
 
         <label class="field range-field">
             <span>Current price <output>@Scenario.CurrentPrice.ToString("0.##")</output></span>
-            <input type="range" min="0" max="@PriceMaximum" step="1" @bind="Scenario.CurrentPrice" @bind:after="NotifyChanged" />
+            <FluentSlider TValue="decimal" Min="0" Max="@PriceMaximum" Step="1" Width="100%" @bind-Value="Scenario.CurrentPrice" @bind-Value:after="NotifyChanged" />
             <small>Drag the quote instead of typing a new number.</small>
         </label>
 
         <label class="field range-field">
             <span>Future price multiplier <output>@Scenario.FuturePriceMultiplier.ToString("0.00")</output></span>
-            <input type="range" min="0" max="2" step="0.05" @bind="Scenario.FuturePriceMultiplier" @bind:after="NotifyChanged" />
+            <FluentSlider TValue="decimal" Min="0" Max="@(2m)" Step="@(0.05m)" Width="100%" @bind-Value="Scenario.FuturePriceMultiplier" @bind-Value:after="NotifyChanged" />
             <small>1.00 keeps the current quote unchanged.</small>
         </label>
 
         <label class="field range-field">
             <span>Care success <output>@Scenario.CareSuccessProbability.ToString("P0")</output></span>
-            <input type="range" min="0" max="1" step="0.05" @bind="Scenario.CareSuccessProbability" @bind:after="NotifyChanged" />
+            <FluentSlider TValue="decimal" Min="0" Max="1" Step="@(0.05m)" Width="100%" @bind-Value="Scenario.CareSuccessProbability" @bind-Value:after="NotifyChanged" />
             <small>Lower the chance to see crop risk affect the decision.</small>
         </label>
 
@@ -41,13 +41,13 @@
         {
             <label class="field range-field">
                 <span>Visible mature opponent crops <output>@Scenario.VisibleOpponentMatureCrops</output></span>
-                <input type="range" min="0" max="8" step="1" @bind="Scenario.VisibleOpponentMatureCrops" @bind:after="NotifyChanged" />
+                <FluentSlider TValue="int" Min="0" Max="8" Step="1" Width="100%" @bind-Value="Scenario.VisibleOpponentMatureCrops" @bind-Value:after="NotifyChanged" />
                 <small>More visible crops add supply pressure.</small>
             </label>
 
             <label class="field range-field">
                 <span>Active demand sources <output>@Scenario.ActiveDemandSources</output></span>
-                <input type="range" min="0" max="2" step="1" @bind="Scenario.ActiveDemandSources" @bind:after="NotifyChanged" />
+                <FluentSlider TValue="int" Min="0" Max="2" Step="1" Width="100%" @bind-Value="Scenario.ActiveDemandSources" @bind-Value:after="NotifyChanged" />
                 <small>More demand sources support the price belief.</small>
             </label>
         }

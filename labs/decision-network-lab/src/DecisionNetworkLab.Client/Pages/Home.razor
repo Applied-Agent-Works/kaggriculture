@@ -12,24 +12,21 @@
     </p>
 </section>
 
-<section class="network-picker panel" aria-labelledby="network-picker-title">
-    <div>
-        <h2 id="network-picker-title">Choose a crop network</h2>
-        <p class="help-text">Carrot shows the first coarse belief model. Wheat and melon begin with point-price estimates.</p>
-    </div>
-    <label class="field compact-field">
-        <span>Crop network</span>
-        <select @bind="SelectedNetworkId">
+<div class="experience-layout">
+<FluentCard Class="@DiagramPanelClass" aria-labelledby="diagram-title">
+    <div class="network-picker" aria-labelledby="network-picker-title">
+        <div>
+            <h2 id="network-picker-title">Choose a crop network</h2>
+            <p class="help-text">Carrot shows the first coarse belief model. Wheat and melon begin with point-price estimates.</p>
+        </div>
+        <FluentSelect TOption="string" TValue="string" @bind-Value="SelectedNetworkId" Label="Crop network" Class="compact-field">
             @foreach (var network in Networks)
             {
-                <option value="@network.Id">@network.Name</option>
+                <FluentOption TOption="string" Value="@network.Id">@network.Name</FluentOption>
             }
-        </select>
-    </label>
-</section>
+        </FluentSelect>
+    </div>
 
-<div class="experience-layout">
-<section class="panel network-panel @(DiagramExpanded ? "network-panel-expanded" : string.Empty)" aria-labelledby="diagram-title">
     <div class="section-heading">
         <div>
             <p class="eyebrow">Structure</p>
@@ -37,22 +34,22 @@
         </div>
         <div class="diagram-actions">
             <span class="help-text">Arrows describe information flow, not code dependencies.</span>
-            <button class="diagram-expand-button" type="button" @onclick="ToggleDiagramExpanded">
+            <FluentButton Appearance="ButtonAppearance.Outline" @onclick="ToggleDiagramExpanded">
                 @(DiagramExpanded ? "Close full view" : "Open full view")
-            </button>
+            </FluentButton>
         </div>
     </div>
     <DecisionNetworkDiagram Network="CurrentNetwork" />
-</section>
+</FluentCard>
 
 <div class="workspace-grid">
-    <section class="panel scenario-panel" aria-labelledby="scenario-title">
+    <FluentCard Class="scenario-panel" aria-labelledby="scenario-title">
         <div class="section-heading">
             <div>
                 <p class="eyebrow">Inputs</p>
                 <h2 id="scenario-title">Explore a scenario</h2>
             </div>
-            <span class="model-badge">@CurrentNetwork.PricingApproach</span>
+            <FluentBadge>@CurrentNetwork.PricingApproach</FluentBadge>
         </div>
 
         <p>@CurrentNetwork.Summary</p>
@@ -60,7 +57,7 @@
                           Scenario="CurrentScenario"
                           Changed="HandleScenarioChanged"
                           PresetRequested="ApplyPreset" />
-    </section>
+    </FluentCard>
 
     <InteractiveEvaluationPanel Result="Result"
                                 Simulation="Simulation"

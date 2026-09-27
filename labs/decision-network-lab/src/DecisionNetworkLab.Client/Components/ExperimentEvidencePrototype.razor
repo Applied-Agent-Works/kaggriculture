@@ -1,12 +1,12 @@
 @using DecisionNetworkLab.Core
 
-<section class="panel evidence-panel" aria-labelledby="evidence-title">
+<FluentCard Class="evidence-panel" aria-labelledby="evidence-title">
     <div class="section-heading">
         <div>
             <p class="eyebrow">Phase 2 prototype</p>
             <h2 id="evidence-title">Experiment evidence</h2>
         </div>
-        <span class="model-badge">FROZEN PACKAGE</span>
+        <FluentBadge Appearance="BadgeAppearance.Outline">FROZEN PACKAGE</FluentBadge>
     </div>
 
     <div class="evidence-intro">
@@ -16,25 +16,22 @@
     </div>
 
     <div class="evidence-metrics">
-        <div><span>Baseline mean</span><strong>@Evidence.BaselineMeanReward.ToString("0.00")</strong></div>
-        <div><span>Candidate mean</span><strong>@Evidence.CandidateMeanReward.ToString("0.00")</strong></div>
-        <div><span>Mean delta</span><strong>+@Evidence.MeanDelta.ToString("0.00")</strong></div>
-        <div><span>Paired runs</span><strong>@Evidence.PairedRuns</strong></div>
+        <FluentCard><span>Baseline mean</span><strong>@Evidence.BaselineMeanReward.ToString("0.00")</strong></FluentCard>
+        <FluentCard><span>Candidate mean</span><strong>@Evidence.CandidateMeanReward.ToString("0.00")</strong></FluentCard>
+        <FluentCard><span>Mean delta</span><strong>+@Evidence.MeanDelta.ToString("0.00")</strong></FluentCard>
+        <FluentCard><span>Paired runs</span><strong>@Evidence.PairedRuns</strong></FluentCard>
     </div>
 
     <div class="evidence-review-grid">
         <div class="evidence-table-wrap">
             <div class="evidence-subheading">
                 <h3>Paired runs</h3>
-                <label class="evidence-select-label">
-                    <span>Inspect trace</span>
-                    <select @bind="SelectedPairKey">
+                    <FluentSelect TOption="string" TValue="string" @bind-Value="SelectedPairKey" Label="Inspect trace" Class="evidence-select">
                         @foreach (var pair in Evidence.Pairs)
                         {
-                            <option value="@PairKey(pair)">Seed @pair.Seed · seat @pair.DecisionPlayer</option>
+                            <FluentOption TOption="string" Value="@PairKey(pair)">Seed @pair.Seed · seat @pair.DecisionPlayer</FluentOption>
                         }
-                    </select>
-                </label>
+                    </FluentSelect>
             </div>
 
             <table class="evidence-table">
@@ -56,7 +53,7 @@
             </table>
         </div>
 
-        <aside class="trace-preview" aria-live="polite">
+        <FluentCard Class="trace-preview" aria-live="polite">
             <div class="evidence-subheading">
                 <h3>Trace preview</h3>
                 <span class="trace-label">@SelectedPair.Trace.SourceLabel</span>
@@ -71,8 +68,8 @@
                 <span>Visible ripe carrots <strong>@SelectedPair.Trace.VisibleOpponentRipeCarrots</strong></span>
             </div>
             <p class="trace-explanation">This is action-time evidence from a frozen trace, not a recomputed result.</p>
-        </aside>
+        </FluentCard>
     </div>
 
     <p class="evidence-footer">Future versions will load <code>manifest.json</code>, summaries, and traces from the local evidence package.</p>
-</section>
+</FluentCard>

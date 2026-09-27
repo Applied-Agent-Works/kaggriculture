@@ -18,6 +18,7 @@ changes should add a decision rather than silently rewriting an old one.
 | ADR-009 | Use MSTest for core evaluator tests | Accepted | 2026-09-27 |
 | ADR-010 | Exchange Phase 2 evidence through frozen local packages | Accepted | 2026-09-27 |
 | ADR-011 | Prototype evidence review inside the existing client screen | Accepted | 2026-09-27 |
+| ADR-014 | Use Fluent UI for general presentation controls | Accepted | 2026-09-27 |
 
 ## ADR-001 — Keep the first experience in its own lab
 
@@ -258,3 +259,24 @@ changes should add a decision rather than silently rewriting an old one.
 - Evidence: `DecisionResult`, `DecisionTraceModels.cs`, and
   `InteractiveEvaluationPanel.razor`.
 - Supersedes: None.
+
+## ADR-014 — Use Fluent UI for general presentation controls
+
+- Date: 2026-09-27
+- Status: Accepted
+- Context: The Phase 1.5 screen had accumulated hand-built controls, cards,
+  and input styling. The user wants a visually robust interface that remains
+  understandable and not oversized.
+- Decision: Use the approved `Microsoft.FluentUI.AspNetCore.Components` v5
+  package for general cards, buttons, badges, selects, sliders, number inputs,
+  providers, and the component stylesheet. Keep the custom dark palette,
+  teaching-specific layout, evidence table, and interactive SVG local.
+- Alternatives considered: Continue expanding hand-built CSS; use the Fluent
+  Web Components/npm route; add a larger design-system or chart framework.
+- Consequences: The UI gains consistent accessible controls and fewer local
+  style rules at the cost of one additional NuGet package and a larger client
+  dependency graph. The calculation core remains independent of the package.
+- Evidence: `DecisionNetworkLab.Client.csproj`, `Program.cs`, `index.html`,
+  and the Fluent migration in the Phase 1.5 client components.
+- Supersedes: The presentation portion of ADR-004; the dependency-minimizing
+  boundary remains in force for the core and simulator.

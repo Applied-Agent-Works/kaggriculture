@@ -11,6 +11,9 @@ public partial class Home
     private int simulationSeed = 42;
     private bool DiagramExpanded { get; set; }
 
+    private string DiagramPanelClass =>
+        DiagramExpanded ? "network-panel network-panel-expanded" : "network-panel";
+
     private IReadOnlyList<DecisionNetworkDefinition> Networks => NetworkCatalog.All;
 
     private DecisionNetworkDefinition CurrentNetwork =>

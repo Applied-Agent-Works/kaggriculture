@@ -1,7 +1,7 @@
 @using DecisionNetworkLab.Core
 @using Microsoft.AspNetCore.Components.Web
 
-<section class="panel result-panel" aria-labelledby="result-title" aria-live="polite">
+<FluentCard Class="result-panel" aria-labelledby="result-title" aria-live="polite">
     <div class="section-heading">
         <div>
             <p class="eyebrow">Evaluation</p>
@@ -13,7 +13,7 @@
     <div class="action-comparison" aria-label="Action comparison">
         @foreach (var action in Result.Actions)
         {
-            <div class="action-card @(action.IsRecommended ? "action-card-recommended" : string.Empty) @(action.IsAvailable ? string.Empty : "action-card-unavailable")">
+            <FluentCard Class="@ActionCardClass(action)">
                 <div class="action-card-heading">
                     <span>@action.Action</span>
                     @if (action.IsRecommended)
@@ -23,13 +23,13 @@
                 </div>
                 <output>@action.Utility.ToString("0.##")</output>
                 <small>@(action.IsAvailable ? action.Explanation : "Not available in this time window.")</small>
-            </div>
+            </FluentCard>
         }
     </div>
 
     <div class="evaluation-facts">
-        <div><span>Expected yield</span><strong>@Result.ExpectedYield.ToString("0.##")</strong></div>
-        <div><span>Expected price</span><strong>@Result.PriceBelief.ExpectedPrice.ToString("0.##")</strong></div>
+        <FluentCard><span>Expected yield</span><strong>@Result.ExpectedYield.ToString("0.##")</strong></FluentCard>
+        <FluentCard><span>Expected price</span><strong>@Result.PriceBelief.ExpectedPrice.ToString("0.##")</strong></FluentCard>
     </div>
 
     <div class="trace-heading">
@@ -60,15 +60,15 @@
         <div class="simulation-controls">
             <label class="seed-field">
                 <span>Seed</span>
-                <input type="number" value="@Seed" @onchange="HandleSeedChanged" />
+                <FluentNumberInput TValue="int" Label="Seed" @bind-Value="Seed" @bind-Value:after="NotifySeedChanged" />
             </label>
-            <button type="button" class="primary-button" @onclick="RunSimulation">Run simulation</button>
+            <FluentButton Appearance="ButtonAppearance.Primary" @onclick="RunSimulation">Run simulation</FluentButton>
         </div>
     </div>
 
     @if (Simulation is not null)
     {
-        <div class="simulation-result">
+        <FluentCard Class="simulation-result">
             <div class="simulation-result-heading">
                 <div>
                     <p class="eyebrow">Seeded run @Simulation.Seed</p>
@@ -85,9 +85,9 @@
                     </li>
                 }
             </ol>
-        </div>
+        </FluentCard>
     }
-</section>
+</FluentCard>
 
 @code {
     [Parameter, EditorRequired]
@@ -105,11 +105,9 @@
     [Parameter]
     public EventCallback RunSimulation { get; set; }
 
-    private Task HandleSeedChanged(ChangeEventArgs args)
-    {
-        return int.TryParse(args.Value?.ToString(), out var seed)
-            ? SeedChanged.InvokeAsync(seed)
-            : Task.CompletedTask;
-    }
+    private Task NotifySeedChanged() => SeedChanged.InvokeAsync(Seed);
+
+    private static string ActionCardClass(DecisionActionValue action) =>
+        $"action-card {(action.IsRecommended ? "action-card-recommended" : string.Empty)} {(action.IsAvailable ? string.Empty : "action-card-unavailable")}";
 
 }
