@@ -156,7 +156,7 @@ load.
 
 ### Phase 1.5 — Interactive decision experience
 
-Status: implementation in progress.
+Status: complete for the current three-network scope.
 
 The goal of this phase is to make the first screen an interactive laboratory,
 not just a diagram with explanatory text.
@@ -164,29 +164,31 @@ not just a diagram with explanatory text.
 The first increment includes:
 
 - scenario presets and range controls;
+- clear separation between current game state and model assumptions;
 - structured action comparison values for `PLANT` and `PASS`;
 - a causal decision trace shared by the core evaluator and the UI;
-- a structured trace that follows the same evidence-to-decision order as the
-  SVG diagram;
 - a seeded local simulator for the three one-time crop examples;
+- an automatically refreshed live local simulation when controls or seed change;
 - Fluent UI presentation controls with the existing dark visual language;
 - explicit separation between immediate teaching feedback and authoritative
   Python batch evidence.
 
 The local simulator is intentionally small. It does not replace the Python
 Kaggriculture simulator, and it does not promote its educational lifecycle
-assumptions into game rules. Its purpose is to let a learner change a value,
-run one reproducible scenario, and see the decision path and outcome.
+assumptions into game rules. Its purpose is to let a learner change a value and
+immediately see one deterministic, seeded sample outcome alongside the
+expected evaluation. The seed controls repeatability; it is not game state.
+The full decision trace remains available to the network diagram and evidence
+surfaces, but is intentionally not repeated in the Evaluation card.
 
-Remaining Phase 1.5 work:
+Phase 1.5 acceptance:
 
-1. Browser-check complete for Fluent controls, trace readability, and seeded
-   run.
-2. Refine labels and density after interactive use.
-3. Add tests for edge cases discovered during browser review.
-4. Revisit trace-to-diagram selection as a focused UI follow-up.
-5. Keep the Python evidence-package importer in the deferred backlog until a
-   later phase is deliberately assigned.
+1. Fluent controls, game-state labels, and assumption labels are browser-checked.
+2. The three crop networks render with the focused Evaluation card.
+3. The local sample refreshes when scenario controls or seed change.
+4. Core evaluator tests pass for the three networks.
+
+The Python evidence-package importer remains intentionally deferred to Phase 2.
 
 ## Deferred backlog — phase unassigned
 

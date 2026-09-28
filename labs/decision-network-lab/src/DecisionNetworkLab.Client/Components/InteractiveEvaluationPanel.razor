@@ -32,37 +32,16 @@
         <FluentCard><span>Expected price</span><strong>@Result.PriceBelief.ExpectedPrice.ToString("0.##")</strong></FluentCard>
     </div>
 
-    <div class="trace-heading">
-        <div>
-            <h3>Decision trace</h3>
-            <p class="help-text">The trace follows the same evidence-to-decision order as the diagram.</p>
-        </div>
-    </div>
-
-    <ol class="decision-trace">
-        @foreach (var step in Result.Trace)
-        {
-            <li class="decision-trace-step">
-                <span class="trace-step-number">@step.Order</span>
-                <div>
-                    <div class="trace-step-heading"><strong>@step.Label</strong><span>@step.Value</span></div>
-                    <p>@step.Explanation</p>
-                </div>
-            </li>
-        }
-    </ol>
-
     <div class="simulation-launch">
         <div>
-            <h3>Run the local simulator</h3>
-            <p class="help-text">This is a seeded teaching run, separate from the Python batch evaluator.</p>
+            <h3>Live local simulation</h3>
+            <p class="help-text">Updates when the scenario or seed changes. This is separate from the Python batch evaluator.</p>
         </div>
         <div class="simulation-controls">
             <label class="seed-field">
                 <span>Seed</span>
-                <FluentNumberInput TValue="int" Label="Seed" @bind-Value="Seed" @bind-Value:after="NotifySeedChanged" />
+                <FluentNumberInput TValue="int" Label="Seed" Value="@Seed" ValueChanged="NotifySeedChanged" />
             </label>
-            <FluentButton Appearance="ButtonAppearance.Primary" @onclick="RunSimulation">Run simulation</FluentButton>
         </div>
     </div>
 
@@ -102,10 +81,7 @@
     [Parameter]
     public EventCallback<int> SeedChanged { get; set; }
 
-    [Parameter]
-    public EventCallback RunSimulation { get; set; }
-
-    private Task NotifySeedChanged() => SeedChanged.InvokeAsync(Seed);
+    private Task NotifySeedChanged(int seed) => SeedChanged.InvokeAsync(seed);
 
     private static string ActionCardClass(DecisionActionValue action) =>
         $"action-card {(action.IsRecommended ? "action-card-recommended" : string.Empty)} {(action.IsAvailable ? string.Empty : "action-card-unavailable")}";

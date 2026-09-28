@@ -12,7 +12,10 @@
         }
     </div>
 
-    <div class="field-grid">
+    <section class="input-group" aria-labelledby="game-state-title">
+        <h3 id="game-state-title">Current game state</h3>
+        <p class="input-group-help">Evidence available at this decision point.</p>
+        <div class="field-grid">
         <label class="field range-field">
             <span>Day <output>@Scenario.Day</output></span>
             <FluentSlider TValue="int" Min="0" Max="29" Step="1" Width="100%" @bind-Value="Scenario.Day" @bind-Value:after="NotifyChanged" />
@@ -23,18 +26,6 @@
             <span>Current price <output>@Scenario.CurrentPrice.ToString("0.##")</output></span>
             <FluentSlider TValue="decimal" Min="0" Max="@PriceMaximum" Step="1" Width="100%" @bind-Value="Scenario.CurrentPrice" @bind-Value:after="NotifyChanged" />
             <small>Drag the quote instead of typing a new number.</small>
-        </label>
-
-        <label class="field range-field">
-            <span>Future price multiplier <output>@Scenario.FuturePriceMultiplier.ToString("0.00")</output></span>
-            <FluentSlider TValue="decimal" Min="0" Max="@(2m)" Step="@(0.05m)" Width="100%" @bind-Value="Scenario.FuturePriceMultiplier" @bind-Value:after="NotifyChanged" />
-            <small>1.00 keeps the current quote unchanged.</small>
-        </label>
-
-        <label class="field range-field">
-            <span>Care success <output>@Scenario.CareSuccessProbability.ToString("P0")</output></span>
-            <FluentSlider TValue="decimal" Min="0" Max="1" Step="@(0.05m)" Width="100%" @bind-Value="Scenario.CareSuccessProbability" @bind-Value:after="NotifyChanged" />
-            <small>Lower the chance to see crop risk affect the decision.</small>
         </label>
 
         @if (Network.PricingApproach == PricingApproach.CarrotBeliefModel)
@@ -51,7 +42,26 @@
                 <small>More demand sources support the price belief.</small>
             </label>
         }
-    </div>
+        </div>
+    </section>
+
+    <section class="input-group" aria-labelledby="model-assumptions-title">
+        <h3 id="model-assumptions-title">Model assumptions</h3>
+        <p class="input-group-help">Temporary what-if values used by this first model.</p>
+        <div class="field-grid">
+            <label class="field range-field">
+                <span>Future price multiplier <output>@Scenario.FuturePriceMultiplier.ToString("0.00")</output></span>
+                <FluentSlider TValue="decimal" Min="0" Max="@(2m)" Step="@(0.05m)" Width="100%" @bind-Value="Scenario.FuturePriceMultiplier" @bind-Value:after="NotifyChanged" />
+                <small>1.00 keeps the current quote unchanged.</small>
+            </label>
+
+            <label class="field range-field">
+                <span>Care success <output>@Scenario.CareSuccessProbability.ToString("P0")</output></span>
+                <FluentSlider TValue="decimal" Min="0" Max="1" Step="@(0.05m)" Width="100%" @bind-Value="Scenario.CareSuccessProbability" @bind-Value:after="NotifyChanged" />
+                <small>Lower the chance to see crop risk affect the decision.</small>
+            </label>
+        </div>
+    </section>
 
     <div class="fixed-facts">
         <h3>Fixed game facts</h3>

@@ -85,6 +85,9 @@ fluent-select, fluent-slider, fluent-number-input { display: block; width: 100%;
 .uml-help-text { color: #9eb2bf; margin: 0.75rem 0 0; }
 
 .scenario-controls { margin-top: 1rem; }
+.input-group + .input-group { border-top: 1px solid #2d4555; margin-top: 1.25rem; padding-top: 1rem; }
+.input-group h3 { margin-bottom: 0.15rem; }
+.input-group-help { color: #9eb2bf; font-size: 0.78rem; line-height: 1.4; margin: 0; }
 .preset-row { align-items: center; display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.15rem 0 1.25rem; }
 .preset-label { color: #9eb2bf; font-size: 0.78rem; margin-right: 0.25rem; }
 .field-grid { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 1.25rem 0 1.5rem; }
@@ -117,15 +120,7 @@ fluent-select, fluent-slider, fluent-number-input { display: block; width: 100%;
 .evaluation-facts span { color: #9eb2bf; font-size: 0.75rem; }
 .evaluation-facts strong { color: #e9f4f7; font-size: 1.15rem; margin-top: 0.25rem; }
 
-.trace-heading { border-top: 1px solid #2d4555; padding-top: 1rem; }
-.trace-heading h3 { margin-bottom: 0.2rem; }
-.decision-trace, .simulation-steps { list-style: none; margin: 0; padding: 0; }
-.decision-trace { display: grid; gap: 0.35rem; margin-top: 0.75rem; }
-.decision-trace-step { align-items: start; background: #10202b; border: 1px solid transparent; border-radius: 0.45rem; display: grid; gap: 0.6rem; grid-template-columns: 1.4rem 1fr; padding: 0.5rem; }
-.trace-step-number { align-items: center; background: #24465d; border-radius: 50%; color: #d7edf6; display: flex; font-size: 0.7rem; height: 1.35rem; justify-content: center; width: 1.35rem; }
-.trace-step-heading strong { color: #d9edf4; font-size: 0.82rem; }
-.trace-step-heading span { color: #f0c36a; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.75rem; text-align: right; }
-.decision-trace-step p { color: #9eb2bf; font-size: 0.75rem; line-height: 1.35; margin: 0.25rem 0 0; }
+.simulation-steps { list-style: none; margin: 0; padding: 0; }
 
 .simulation-launch { align-items: end; border-top: 1px solid #2d4555; display: flex; gap: 1rem; justify-content: space-between; margin-top: 1rem; padding-top: 1rem; }
 .simulation-launch h3 { margin-bottom: 0.2rem; }

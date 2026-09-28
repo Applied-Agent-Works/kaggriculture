@@ -20,6 +20,7 @@ changes should add a decision rather than silently rewriting an old one.
 | ADR-011 | Prototype evidence review inside the existing client screen | Accepted | 2026-09-27 |
 | ADR-014 | Use Fluent UI for general presentation controls | Accepted | 2026-09-27 |
 | ADR-015 | Use Mermaid for the interactive network SVG | Accepted | 2026-09-27 |
+| ADR-016 | Keep evaluation focused and refresh the local sample automatically | Accepted | 2026-09-28 |
 
 ## ADR-001 — Keep the first experience in its own lab
 
@@ -305,3 +306,26 @@ changes should add a decision rather than silently rewriting an old one.
   `MermaidDecisionNetworkDiagram.razor`, and `wwwroot/js/mermaid-interop.js`.
 - Supersedes: The diagram-rendering portion of ADR-006; the custom SVG
   interaction boundary is replaced by Mermaid plus JS interop.
+
+## ADR-016 — Keep evaluation focused and refresh the local sample automatically
+
+- Date: 2026-09-28
+- Status: Accepted
+- Context: The first Evaluation card repeated the entire decision trace and
+  required a separate button to run a narrow seeded browser simulation. The
+  scenario controls already recalculate the expected evaluation immediately.
+- Decision: Label observed values as current game state and keep forecasting
+  values under model assumptions. Remove the repeated full trace from the
+  Evaluation card. Refresh the seeded local sample automatically when the
+  scenario or seed changes, while keeping the core trace available to the
+  Mermaid diagram and evidence surfaces.
+- Alternatives considered: Keep the manual Run button; repeat the trace in
+  every surface; make the seed part of game state; connect the browser to the
+  Python simulator.
+- Consequences: The first screen gives immediate feedback with less visual
+  duplication. The sample remains a deterministic teaching realization, not a
+  full daily game simulation or authoritative batch result.
+- Evidence: `ScenarioControls.razor`, `InteractiveEvaluationPanel.razor`,
+  `Home.razor.cs`, and the Phase 1.5 acceptance notes in `README.md`.
+- Supersedes: The Evaluation-card presentation portion of ADR-013; the
+  structured trace contract remains in the core model.

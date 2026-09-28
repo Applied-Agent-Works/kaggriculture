@@ -26,12 +26,21 @@ public partial class Home
     private int SimulationSeed
     {
         get => simulationSeed;
-        set => simulationSeed = value;
+        set
+        {
+            simulationSeed = value;
+            RefreshSimulation();
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        RefreshSimulation();
     }
 
     private Task HandleScenarioChanged()
     {
-        simulation = null;
+        RefreshSimulation();
         return Task.CompletedTask;
     }
 
@@ -53,10 +62,10 @@ public partial class Home
                 break;
         }
 
-        simulation = null;
+        RefreshSimulation();
     }
 
-    private void RunSimulation()
+    private void RefreshSimulation()
     {
         simulation = InteractiveSimulator.Run(CurrentNetwork, CurrentScenario, SimulationSeed);
     }
@@ -73,7 +82,7 @@ public partial class Home
 
             selectedNetworkId = value;
             currentScenario = CreateScenario(CurrentNetwork);
-            simulation = null;
+            RefreshSimulation();
         }
     }
 
