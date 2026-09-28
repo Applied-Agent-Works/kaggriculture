@@ -1,0 +1,46 @@
+@using Microsoft.FluentUI.AspNetCore.Components
+
+<FluentCard Class="evidence-panel" aria-labelledby="evidence-review-title">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Phase 2</p>
+            <h2 id="evidence-review-title">Evidence and replay review</h2>
+        </div>
+        <FluentBadge Appearance="BadgeAppearance.Outline">READ-ONLY</FluentBadge>
+    </div>
+
+    <div class="evidence-source-groups" role="tablist" aria-label="Evidence source">
+        <button class="evidence-source-tab @(Source == "matches" ? "evidence-source-tab-selected" : string.Empty)" role="tab" aria-selected="@(Source == "matches")" @onclick="ShowMatches">
+            Local match history
+        </button>
+        <button class="evidence-source-tab @(Source == "replays" ? "evidence-source-tab-selected" : string.Empty)" role="tab" aria-selected="@(Source == "replays")" @onclick="ShowReplays">
+            Replay recordings
+        </button>
+        <button class="evidence-source-tab @(Source == "packages" ? "evidence-source-tab-selected" : string.Empty)" role="tab" aria-selected="@(Source == "packages")" @onclick="ShowPackages">
+            Frozen evidence packages
+        </button>
+    </div>
+
+    @if (Source == "matches")
+    {
+        <MatchHistoryCatalog />
+    }
+    else if (Source == "replays")
+    {
+        <ReplayCatalog />
+    }
+    else
+    {
+        <FrozenEvidenceReview />
+    }
+
+    <p class="evidence-footer">Agent folders are provenance sources only. The browser does not execute or modify agent code.</p>
+</FluentCard>
+
+@code {
+    private string Source { get; set; } = "matches";
+
+    private void ShowMatches() => Source = "matches";
+    private void ShowReplays() => Source = "replays";
+    private void ShowPackages() => Source = "packages";
+}

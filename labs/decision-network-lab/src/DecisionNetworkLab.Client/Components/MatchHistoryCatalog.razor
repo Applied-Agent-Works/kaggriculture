@@ -1,0 +1,174 @@
+@using DecisionNetworkLab.Core
+@using System.Text.Json
+@inject HttpClient Http
+
+<div class="match-history-catalog">
+    <div class="evidence-loader">
+        <div>
+            <strong>Local match history</strong>
+            <p>Loaded read-only from the configured local directory. Recordings stay in their existing folder.</p>
+        </div>
+        <button class="evidence-source-tab" @onclick="LoadFromServer">Refresh runs</button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(StatusMessage))
+    {
+        <p class="evidence-load-message @(LoadSucceeded ? "evidence-load-success" : "evidence-load-error")">@StatusMessage</p>
+    }
+
+    @if (Matches.Count > 0)
+    {
+        <div class="evidence-subheading">
+            <h3>Recorded matches</h3>
+            <span class="trace-label">@Matches.Count recordings · newest first</span>
+        </div>
+
+        <ol class="match-history-list">
+            @foreach (var match in Matches)
+            {
+                <li class="match-history-item">
+                    <details>
+                        <summary>
+                            <span class="match-history-pair">
+                                <strong>@match.Agent</strong>
+                                <span>vs</span>
+                                <strong>@match.Opponent</strong>
+                            </span>
+                            <span class="match-history-result @WinnerClass(match)">@WinnerText(match)</span>
+                        </summary>
+
+                        <div class="match-history-details">
+                            <div class="match-history-facts">
+                                <div><span>Player 1 · agent</span><strong>@match.Agent</strong></div>
+                                <div><span>Player 2 · opponent</span><strong>@match.Opponent</strong></div>
+                                <div><span>Final rewards</span><strong>@RewardText(match)</strong></div>
+                                <div><span>Winner</span><strong>@WinnerText(match)</strong></div>
+                                <div><span>Seed</span><strong>@match.Seed</strong></div>
+                                <div><span>Season</span><strong>@match.Days days · @match.Steps steps</strong></div>
+                                <div><span>Status</span><strong>@string.Join(" · ", match.Statuses)</strong></div>
+                                <div><span>Recorded</span><strong>@match.CreatedAt</strong></div>
+                            </div>
+
+                            @if (match.AgentMetadata is not null || match.OpponentMetadata is not null)
+                            {
+                                <div class="match-history-agent-metadata">
+                                    <span>Agent creator metadata</span>
+                                    @if (match.AgentMetadata is not null)
+                                    {
+                                        <div>
+                                            <strong>Agent: @match.AgentMetadata.Label</strong>
+                                            <p>@match.AgentMetadata.Description</p>
+                                            <small>@MetadataSummary(match.AgentMetadata)</small>
+                                        </div>
+                                    }
+                                    @if (match.OpponentMetadata is not null)
+                                    {
+                                        <div>
+                                            <strong>Opponent: @match.OpponentMetadata.Label</strong>
+                                            <p>@match.OpponentMetadata.Description</p>
+                                            <small>@MetadataSummary(match.OpponentMetadata)</small>
+                                        </div>
+                                    }
+                                </div>
+                            }
+
+                            <div class="match-history-metadata">
+                                <span>Run metadata</span>
+                                <strong>@match.Source · @match.Id</strong>
+                                <code>@match.RecordingPath</code>
+                            </div>
+
+                            <button class="evidence-source-tab" @onclick="() => OpenRecording(match)">
+                                @(SelectedRecording?.Summary.Id == match.Id ? "Recording loaded" : "Inspect recording")
+                            </button>
+                        </div>
+                    </details>
+                </li>
+            }
+        </ol>
+    }
+
+    <RecordingTimeline Recording="SelectedRecording" SourceLabel="Local match history" />
+</div>
+
+@code {
+    private IReadOnlyList<RecordedMatchSummary> Matches { get; set; } = Array.Empty<RecordedMatchSummary>();
+    private string? StatusMessage { get; set; }
+    private bool LoadSucceeded { get; set; }
+    private string? SourceDirectory { get; set; }
+    private RecordedMatchDetails? SelectedRecording { get; set; }
+
+    private static string WinnerText(RecordedMatchSummary match) => match.Winner switch
+    {
+        "Player 1" => $"{match.Agent} wins",
+        "Player 2" => $"{match.Opponent} wins",
+        "Draw" => "Draw",
+        _ => match.Winner ?? "Unknown result"
+    };
+
+    private static string WinnerClass(RecordedMatchSummary match) => match.Winner switch
+    {
+        "Player 1" => "match-history-result-agent",
+        "Player 2" => "match-history-result-opponent",
+        "Draw" => "match-history-result-draw",
+        _ => "match-history-result-unknown"
+    };
+
+    private static string RewardText(RecordedMatchSummary match)
+    {
+        var rewards = match.Rewards.Select(reward => reward.ToString("0", System.Globalization.CultureInfo.InvariantCulture));
+        return string.Join(" · ", rewards);
+    }
+
+    private static string MetadataSummary(AgentMetadata metadata)
+    {
+        var traits = metadata.Traits.Count == 0 ? "no traits recorded" : string.Join(", ", metadata.Traits);
+        var kind = metadata.SourceKind ?? "source kind not recorded";
+        var approximation = metadata.Approximate is true ? "approximate" : "not marked approximate";
+        var round = string.IsNullOrWhiteSpace(metadata.ExperimentRound) ? "no experiment round" : metadata.ExperimentRound;
+        return $"{kind} · {approximation} · {round} · traits: {traits}";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFromServer();
+    }
+
+    private async Task LoadFromServer()
+    {
+        try
+        {
+            var json = await Http.GetStringAsync("api/match-history");
+            var catalog = JsonSerializer.Deserialize(json, MatchHistoryJsonContext.Default.MatchHistoryCatalog);
+            if (catalog is null)
+            {
+                throw new InvalidOperationException("The local evidence host returned an empty catalog.");
+            }
+
+            Matches = catalog.Matches;
+            SourceDirectory = catalog.SourceDirectory;
+            LoadSucceeded = true;
+            StatusMessage = $"Loaded {Matches.Count} recorded matches from {SourceDirectory}.";
+        }
+        catch (Exception exception)
+        {
+            Matches = Array.Empty<RecordedMatchSummary>();
+            LoadSucceeded = false;
+            StatusMessage = $"The local match history could not be loaded: {exception.Message}";
+        }
+    }
+
+    private async Task OpenRecording(RecordedMatchSummary match)
+    {
+        try
+        {
+            var json = await Http.GetStringAsync($"api/match-history/{Uri.EscapeDataString(match.Id)}");
+            SelectedRecording = JsonSerializer.Deserialize(json, MatchHistoryJsonContext.Default.RecordedMatchDetails);
+        }
+        catch (Exception exception)
+        {
+            LoadSucceeded = false;
+            StatusMessage = $"The selected recording could not be opened: {exception.Message}";
+        }
+    }
+}

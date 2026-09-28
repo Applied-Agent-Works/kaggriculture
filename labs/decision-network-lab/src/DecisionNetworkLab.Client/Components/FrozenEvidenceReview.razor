@@ -1,0 +1,89 @@
+@using DecisionNetworkLab.Core
+@using System.Text.Json
+@inject HttpClient Http
+
+<div class="frozen-evidence-review">
+    @if (!string.IsNullOrWhiteSpace(StatusMessage))
+    {
+        <p class="evidence-load-message @(Loaded ? "evidence-load-success" : "evidence-load-error")">@StatusMessage</p>
+    }
+
+    @if (Evidence is not null)
+    {
+        <div class="evidence-intro">
+            <strong>@Evidence.ExperimentId</strong>
+            <span>@Evidence.Description</span>
+            <span class="evidence-note">Descriptive only · not a policy verdict</span>
+        </div>
+
+        <div class="evidence-metrics">
+            <FluentCard><span>Baseline mean</span><strong>@Evidence.BaselineMeanReward.ToString("0.00")</strong></FluentCard>
+            <FluentCard><span>Candidate mean</span><strong>@Evidence.CandidateMeanReward.ToString("0.00")</strong></FluentCard>
+            <FluentCard><span>Mean delta</span><strong>@Evidence.MeanDelta.ToString("+0.00;-0.00;0.00")</strong></FluentCard>
+            <FluentCard><span>Paired runs</span><strong>@Evidence.PairedRuns</strong></FluentCard>
+        </div>
+
+        <div class="evidence-review-grid">
+            <table class="evidence-table">
+                <thead><tr><th>Seed</th><th>Seat</th><th>Baseline</th><th>Candidate</th><th>Delta</th></tr></thead>
+                <tbody>
+                    @foreach (var pair in Evidence.Pairs)
+                    {
+                        <tr>
+                            <td>@pair.Seed</td>
+                            <td>@pair.DecisionPlayer</td>
+                            <td>@pair.BaselineReward.ToString("0")</td>
+                            <td>@pair.CandidateReward.ToString("0")</td>
+                            <td>@pair.CandidateMinusBaseline.ToString("+0;-0;0")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            @if (Evidence.Pairs.Count > 0)
+            {
+                var trace = Evidence.Pairs[0].Trace;
+                <FluentCard Class="trace-preview">
+                    <div class="evidence-subheading">
+                        <h3>Trace preview</h3>
+                        <span class="trace-label">@trace.SourceLabel</span>
+                    </div>
+                    <div class="trace-action">@trace.Decision</div>
+                    <div class="trace-facts">
+                        <span>Step <strong>@trace.Step</strong></span>
+                        <span>Day <strong>@trace.Day</strong></span>
+                        <span>Expected price <strong>@trace.ExpectedSalePrice.ToString("0.##")</strong></span>
+                        <span>Plant utility <strong>@trace.PlantUtility.ToString("0.##")</strong></span>
+                        <span>PASS utility <strong>@trace.PassUtility.ToString("0.##")</strong></span>
+                        <span>Visible ripe carrots <strong>@trace.VisibleOpponentRipeCarrots</strong></span>
+                    </div>
+                </FluentCard>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private ExperimentEvidenceSummary? Evidence { get; set; }
+    private string? StatusMessage { get; set; }
+    private bool Loaded { get; set; }
+
+    protected override async Task OnInitializedAsync() => await LoadEvidence();
+
+    private async Task LoadEvidence()
+    {
+        try
+        {
+            var json = await Http.GetStringAsync("api/evidence");
+            Evidence = JsonSerializer.Deserialize(json, MatchHistoryJsonContext.Default.ExperimentEvidenceSummary)
+                ?? throw new InvalidOperationException("The evidence host returned an empty package.");
+            Loaded = true;
+            StatusMessage = $"Loaded frozen evidence package {Evidence.ExperimentId}.";
+        }
+        catch (Exception exception)
+        {
+            Loaded = false;
+            StatusMessage = $"The frozen evidence package could not be loaded: {exception.Message}";
+        }
+    }
+}

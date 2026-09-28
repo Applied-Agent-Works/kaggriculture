@@ -10,16 +10,29 @@
     </div>
 
     <div class="evidence-intro">
-        <strong>@Evidence.ExperimentId</strong>
-        <span>@Evidence.Description</span>
+        <strong>@CurrentEvidence.ExperimentId</strong>
+        <span>@CurrentEvidence.Description</span>
         <span class="evidence-note">Descriptive only · not a policy verdict</span>
     </div>
 
+    <div class="evidence-loader">
+        <div>
+            <strong>Load an existing evidence package</strong>
+            <p>Select <code>manifest.json</code>, <code>comparison-summary.json</code>, and <code>run-summaries.jsonl</code> from the existing experiment output. The files are read in the browser and are not copied into this project.</p>
+        </div>
+        <InputFile OnChange="LoadPackage" multiple accept=".json,.jsonl" />
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(LoadMessage))
+    {
+        <p class="evidence-load-message @(LoadSucceeded ? "evidence-load-success" : "evidence-load-error")">@LoadMessage</p>
+    }
+
     <div class="evidence-metrics">
-        <FluentCard><span>Baseline mean</span><strong>@Evidence.BaselineMeanReward.ToString("0.00")</strong></FluentCard>
-        <FluentCard><span>Candidate mean</span><strong>@Evidence.CandidateMeanReward.ToString("0.00")</strong></FluentCard>
-        <FluentCard><span>Mean delta</span><strong>+@Evidence.MeanDelta.ToString("0.00")</strong></FluentCard>
-        <FluentCard><span>Paired runs</span><strong>@Evidence.PairedRuns</strong></FluentCard>
+        <FluentCard><span>Baseline mean</span><strong>@CurrentEvidence.BaselineMeanReward.ToString("0.00")</strong></FluentCard>
+        <FluentCard><span>Candidate mean</span><strong>@CurrentEvidence.CandidateMeanReward.ToString("0.00")</strong></FluentCard>
+        <FluentCard><span>Mean delta</span><strong>+@CurrentEvidence.MeanDelta.ToString("0.00")</strong></FluentCard>
+        <FluentCard><span>Paired runs</span><strong>@CurrentEvidence.PairedRuns</strong></FluentCard>
     </div>
 
     <div class="evidence-review-grid">
@@ -27,7 +40,7 @@
             <div class="evidence-subheading">
                 <h3>Paired runs</h3>
                     <FluentSelect TOption="string" TValue="string" @bind-Value="SelectedPairKey" Label="Inspect trace" Class="evidence-select">
-                        @foreach (var pair in Evidence.Pairs)
+                        @foreach (var pair in CurrentEvidence.Pairs)
                         {
                             <FluentOption TOption="string" Value="@PairKey(pair)">Seed @pair.Seed · seat @pair.DecisionPlayer</FluentOption>
                         }
@@ -39,7 +52,7 @@
                     <tr><th>Seed</th><th>Seat</th><th>Baseline</th><th>Candidate</th><th>Delta</th></tr>
                 </thead>
                 <tbody>
-                    @foreach (var pair in Evidence.Pairs)
+                    @foreach (var pair in CurrentEvidence.Pairs)
                     {
                         <tr class="@(PairKey(pair) == SelectedPairKey ? "evidence-row-selected" : string.Empty)">
                             <td>@pair.Seed</td>

@@ -21,6 +21,8 @@ changes should add a decision rather than silently rewriting an old one.
 | ADR-014 | Use Fluent UI for general presentation controls | Accepted | 2026-09-27 |
 | ADR-015 | Use Mermaid for the interactive network SVG | Accepted | 2026-09-27 |
 | ADR-016 | Keep evaluation focused and refresh the local sample automatically | Accepted | 2026-09-28 |
+| ADR-017 | Load Phase 2A evidence through local browser file selection | Accepted | 2026-09-28 |
+| ADR-018 | Separate match recordings, replays, and agent provenance | Accepted | 2026-09-28 |
 
 ## ADR-001 — Keep the first experience in its own lab
 
@@ -329,3 +331,112 @@ changes should add a decision rather than silently rewriting an old one.
   `Home.razor.cs`, and the Phase 1.5 acceptance notes in `README.md`.
 - Supersedes: The Evaluation-card presentation portion of ADR-013; the
   structured trace contract remains in the core model.
+
+## ADR-017 — Load Phase 2A evidence through local browser file selection
+
+- Date: 2026-09-28
+- Status: Accepted
+- Context: Existing experiment runs are produced in the Agent and Opponent
+  Selection workflow. The Decision Network Lab should review those artifacts
+  without copying simulator history into this worktree or starting Python from
+  the browser.
+- Decision: The first evidence reader accepts user-selected `manifest.json`,
+  `comparison-summary.json`, and `run-summaries.jsonl` files through the
+  browser's local file input. Core validation normalizes the JSON into the
+  existing UI-friendly evidence model. Compressed decision traces remain a
+  separate follow-up increment.
+- Alternatives considered: Copy run packages into the lab; add an API server;
+  run the Python simulator from Blazor; accept arbitrary unversioned files.
+- Consequences: The lab remains client-side and does not duplicate experiment
+  data. The user must select the package files, and trace previews initially
+  indicate that compressed trace import is pending.
+- Evidence: `PHASE2_EVIDENCE_CONTRACT.md`, `EvidencePackageReader.cs`, and
+  `ExperimentEvidencePrototype.razor`.
+- Supersedes: The importer portion of ADR-010 remains planned, with the local
+  browser file boundary now selected for its first implementation.
+
+## ADR-018 — Separate match recordings, replays, and agent provenance
+
+- Date: 2026-09-28
+- Status: Accepted
+- Context: Phase 2 has several existing source types. Local match history
+  contains recorded matches and an index; the Kaggriculture visualizer contains
+  replay JSON; agent folders contain Python source. Treating these as one file
+  format would blur what was observed and what was executable source.
+- Decision: Group the Phase 2 UI into Local match history and Replay recordings.
+  Keep `opponent-experiment/` and `agents/` as provenance metadata only. Add
+  separate adapters behind a common evidence model.
+- Alternatives considered: Combine all JSON into one generic list; execute
+  agents from the browser; copy source and recordings into the lab; treat
+  visualizer replays as equivalent to match-history records.
+- Consequences: The user can tell what kind of recording is being reviewed.
+  Match-history catalog loading can proceed before full replay support, and
+  provenance can be shown without expanding the runtime boundary.
+- Evidence: `PHASE2_EVIDENCE_CONTRACT.md`, `MatchHistoryReader.cs`, and
+  `EvidenceReviewPanel.razor`.
+- Supersedes: None.
+
+## ADR-020 — Use a minimal local host for configured evidence directories
+
+- Date: 2026-09-28
+- Status: Accepted
+- Context: The user wants the lab to load the existing match-history directory
+  automatically. Blazor WebAssembly cannot read an arbitrary Windows path
+  without a user file selection, so the file picker did not satisfy the
+  intended workflow.
+- Decision: Add a small ASP.NET Core Server project with no third-party
+  dependencies. It serves the built client and exposes one read-only
+  `/api/match-history` endpoint. The endpoint reads only the configured
+  `index.json` and agent-catalog source, normalizes their descriptive metadata,
+  and never executes Python or copies recordings.
+- Alternatives considered: Keep the file picker as the primary workflow; add a
+  cloud API; execute the Python launcher from the browser; copy the sibling
+  worktree into the lab.
+- Consequences: The normal command is now the Server project, and the source
+  directory is configured in `src/DecisionNetworkLab.Server/appsettings.json`.
+  The live contest agent remains entirely separate and local.
+- Evidence: `DecisionNetworkLab.Server.csproj`, `Program.cs`,
+  `appsettings.json`, and `AgentMetadataReader.cs`.
+- Supersedes: The client-only primary-loading portion of ADR-017.
+
+## ADR-021 — Complete Phase 2 with separate recording adapters
+
+- Date: 2026-09-28
+- Status: Accepted
+- Context: Match history, visualizer replays, and frozen evidence packages are
+  related but have different schemas and meanings.
+- Decision: Keep three visible source groups in the UI. Match history and
+  replay files share a day-by-day recording timeline after separate adapters
+  normalize them. Frozen packages use the existing evidence reader and load
+  compressed decision-trace previews through the local host.
+- Alternatives considered: Merge all JSON into one generic record type; show
+  only summary rows; execute the visualizer or Python agent from the browser.
+- Consequences: The user can move from “who played whom?” to “what happened
+  on day 7?” without confusing a replay with a match-history record or a
+  policy trace with simulator truth.
+- Evidence: `RecordedMatchReader.cs`, `ReplayRecordingReader.cs`,
+  `RecordingTimeline.razor`, and `FrozenEvidenceReview.razor`.
+- Supersedes: The deferred adapter portions of ADR-018.
+
+## ADR-019 — Show local match history as an expandable catalog
+
+- Date: 2026-09-28
+- Status: Accepted
+- Context: The existing local match-history index already contains enough
+  metadata to answer the first review question—who played whom, who won, and
+  under which seed and run conditions—without reading every large recording.
+- Decision: Load the user-selected `index.json` in memory and render one
+  expandable list item per match. Show the pairing and winner in the collapsed
+  summary; show rewards, seed, season, statuses, timestamp, source, ID, and
+  recording path when expanded.
+- Alternatives considered: Copy all recordings into the lab; load every full
+  recording before displaying the list; treat agent source descriptions as if
+  they were fields in the match index.
+- Consequences: The first review surface is fast and descriptive. Opening a
+  full recording and enriching a row from agent provenance remain separate
+  adapters. The browser still needs the user to select the producer's
+  `index.json` because Blazor WebAssembly cannot browse an arbitrary local
+  directory.
+- Evidence: `MatchHistoryReader.cs`, `MatchHistoryCatalog.razor`, and
+  `PHASE2_EVIDENCE_CONTRACT.md`.
+- Supersedes: None.

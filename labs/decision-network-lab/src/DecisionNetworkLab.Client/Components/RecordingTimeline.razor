@@ -1,0 +1,71 @@
+@using DecisionNetworkLab.Core
+
+@if (Recording is not null)
+{
+    <section class="recording-review" aria-labelledby="recording-review-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">@SourceLabel</p>
+                <h3 id="recording-review-title">@Recording.Summary.Agent vs @Recording.Summary.Opponent</h3>
+            </div>
+            <span class="trace-label">@Recording.Summary.Steps steps · seed @Recording.Summary.Seed</span>
+        </div>
+
+        <div class="recording-controls">
+            <label for="recording-day">Review day</label>
+            <select id="recording-day" @bind="SelectedDayNumber">
+                @foreach (var day in Recording.Days)
+                {
+                    <option value="@day.Day">Day @day.Day · @day.Turns.Count turns</option>
+                }
+            </select>
+        </div>
+
+        @if (SelectedDay is not null)
+        {
+            <div class="recording-turn-list">
+                @foreach (var turn in SelectedDay.Turns)
+                {
+                    <article class="recording-turn">
+                        <div class="recording-turn-heading">
+                            <strong>Step @turn.Step</strong>
+                            <span>Day @turn.Day · hour @turn.Hour</span>
+                        </div>
+
+                        @foreach (var player in turn.Players)
+                        {
+                            <div class="recording-player-step">
+                                <div class="recording-player-heading">
+                                    <strong>Player @(@player.Player + 1)</strong>
+                                    <span>@player.Status · reward @player.Reward.ToString("0.##")</span>
+                                </div>
+                                <code>@player.Action</code>
+                                <p>@player.ObservationSummary</p>
+                            </div>
+                        }
+                    </article>
+                }
+            </div>
+        }
+    </section>
+}
+
+@code {
+    [Parameter]
+    public RecordedMatchDetails? Recording { get; set; }
+
+    [Parameter]
+    public string SourceLabel { get; set; } = "Recording";
+
+    private int SelectedDayNumber { get; set; }
+
+    private RecordedDay? SelectedDay => Recording?.Days.FirstOrDefault(day => day.Day == SelectedDayNumber);
+
+    protected override void OnParametersSet()
+    {
+        if (Recording is not null && Recording.Days.All(day => day.Day != SelectedDayNumber))
+        {
+            SelectedDayNumber = Recording.Days.FirstOrDefault()?.Day ?? 0;
+        }
+    }
+}

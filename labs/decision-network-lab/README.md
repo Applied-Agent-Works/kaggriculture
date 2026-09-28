@@ -1,7 +1,8 @@
 # Decision Network Lab
 
 This lab is the first user experience for learning from the Kaggriculture
-decision-network work. It is a small, client-side Blazor WebAssembly tool for
+decision-network work. It is a small Blazor WebAssembly tool with a minimal
+local read-only host for
 asking:
 
 > Given the current evidence and assumptions, should the farmer plant this crop
@@ -34,13 +35,19 @@ The UI currently supports:
 9. following a structured decision trace in the same evidence-to-decision
    order as the UML diagram;
 10. running a seeded, narrow local simulator for immediate teaching feedback;
-11. reviewing a compact Phase 2 evidence prototype on the same screen, with
-   paired-run summaries and a selectable trace preview.
+11. reviewing Phase 2 evidence on the same screen, including a local
+   match-history catalog with expandable run details.
 
 This first slice does not yet run the full Kaggriculture simulator, call the
-Python agents, call Foundry, persist experiment results, or use a server API.
-The evidence panel currently uses a frozen in-memory fixture based on the first
-local carrot package; it is not yet the package importer.
+Python agents, call Foundry, or persist experiment results. The local host only
+reads the configured match-history directory and agent catalog; it does not
+execute agent code or copy recordings. The evidence panel loads the existing
+local match-history `index.json` as a descriptive run list. Each match-history
+entry shows the agent-versus-opponent pairing, winner, rewards, seed, season
+length, statuses, timestamp, source, recording path, and available creator
+metadata.
+Full match recording review, replay review, and compressed decision-trace
+review are available through the local read-only host.
 
 The presentation layer uses the approved `Microsoft.FluentUI.AspNetCore.Components`
 package for cards, controls, buttons, and providers. The decision-network SVG
@@ -144,6 +151,24 @@ Next after Phase 1 acceptance:
 - a clear distinction between observed results, model predictions, and later
   advisory commentary.
 
+Phase 2 status: complete for the current evidence sources.
+
+- the Core reader validates schema version, required manifest fields, paired
+  seed/seat results, and baseline/candidate summaries;
+- the client can read the three JSON artifacts from a user-selected local
+  package without copying runs into the repository;
+- the Phase 2 screen now separates Local match history from the future Replay
+  recordings adapter;
+- the local match-history catalog reader is implemented for `index.json`;
+- the catalog is rendered as an expandable run list, with `Player 1` mapped to
+  the recorded agent and `Player 2` mapped to the recorded opponent;
+- the local host enriches matches with descriptions, traits, experiment rounds,
+  source kinds, and approximation markers from the agent catalog without
+  executing the Python source;
+- a selected match or replay opens as a day-by-day, turn-by-turn timeline with
+  actions, rewards, statuses, and compact observation facts;
+- the frozen evidence package loads its compressed decision trace preview.
+
 The Phase 1.5 local simulator is deliberately narrower than the Python
 experiment runner. Phase 2 remains the experiment-review path for asking
 “what happened across a fixed seed suite, under which controls, and what did
@@ -153,6 +178,10 @@ The first evidence producer is documented in
 [evaluation/README.md](evaluation/README.md). It generates the manifest,
 run-summary, and compressed trace artifacts that a later read-only UI view can
 load.
+
+The reader boundary and first package schema are documented in
+[PHASE2_EVIDENCE_CONTRACT.md](PHASE2_EVIDENCE_CONTRACT.md). The lab consumes
+existing packages; it does not copy simulator runs from another worktree.
 
 ### Phase 1.5 — Interactive decision experience
 
@@ -227,13 +256,15 @@ without Blazor, Foundry, cloud services, or LLM calls.
 From this directory:
 
 ```powershell
-dotnet run --project src/DecisionNetworkLab.Client/DecisionNetworkLab.Client.csproj
+dotnet run --project src/DecisionNetworkLab.Server/DecisionNetworkLab.Server.csproj
 ```
 
-The first build may restore the Microsoft Blazor framework packages and the
-approved Fluent UI Blazor package declared by the WebAssembly project. The lab
-also uses a pinned Mermaid browser module for the interactive diagram; no
-external service or JavaScript application framework is used.
+The local server builds the WebAssembly client, serves it on `http://localhost:5192`,
+and exposes one read-only `/api/match-history` endpoint. The directory and
+agent-catalog settings are in
+[appsettings.json](src/DecisionNetworkLab.Server/appsettings.json). Change
+those settings when using a different producer worktree. No cloud service or
+external API is used.
 
 ## Reconstruct on a new machine
 
@@ -252,7 +283,7 @@ machine-specific build output.
 
    ```powershell
    dotnet build --no-restore
-   dotnet run --project src/DecisionNetworkLab.Client/DecisionNetworkLab.Client.csproj --no-restore
+   dotnet run --project src/DecisionNetworkLab.Server/DecisionNetworkLab.Server.csproj --no-restore
    dotnet test --no-restore
    ```
 
@@ -275,6 +306,8 @@ The lab has two projects in the first slice:
   belief calculations, utility calculations, and explanations.
 - `DecisionNetworkLab.Client` contains Razor components, browser interaction,
   and presentation styles.
+- `DecisionNetworkLab.Server` contains only the local read-only evidence host
+  and static client host. It does not run agents or the simulator.
 - `DecisionNetworkLab.Core.Tests` verifies the core without starting a browser
   or simulator.
 
@@ -291,7 +324,7 @@ flowchart LR
     Python["Python live agents"] -. "future evidence boundary" .-> Evaluation["Future local evaluation"]
     Simulator["Kaggriculture simulator"] -. "future evidence boundary" .-> Evaluation
     Evaluation -. "future artifact exchange" .-> Client
-    Server["Optional server/API"] -. "not needed now" .-> Client
+    Server["Local read-only evidence host"] --> Client
 ```
 
 The solid path is the implemented path. Dashed paths are deliberately deferred

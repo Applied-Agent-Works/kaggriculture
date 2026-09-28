@@ -1,0 +1,108 @@
+@using DecisionNetworkLab.Core
+@using System.Text.Json
+@inject HttpClient Http
+
+<div class="match-history-catalog">
+    <div class="evidence-loader">
+        <div>
+            <strong>Replay recordings</strong>
+            <p>These are visualizer replay files, kept separate from local match history.</p>
+        </div>
+        <button class="evidence-source-tab" @onclick="LoadReplays">Refresh replays</button>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(StatusMessage))
+    {
+        <p class="evidence-load-message @(LoadSucceeded ? "evidence-load-success" : "evidence-load-error")">@StatusMessage</p>
+    }
+
+    @if (Replays.Count > 0)
+    {
+        <div class="evidence-subheading">
+            <h3>Replay files</h3>
+            <span class="trace-label">@Replays.Count replays</span>
+        </div>
+
+        <ol class="match-history-list">
+            @foreach (var replay in Replays)
+            {
+                <li class="match-history-item">
+                    <details>
+                        <summary>
+                            <span class="match-history-pair">
+                                <strong>@replay.Agent</strong>
+                                <span>vs</span>
+                                <strong>@replay.Opponent</strong>
+                            </span>
+                            <span class="match-history-result match-history-result-agent">@WinnerText(replay)</span>
+                        </summary>
+                        <div class="match-history-details">
+                            <div class="match-history-facts">
+                                <div><span>File</span><strong>@replay.FileName</strong></div>
+                                <div><span>Seed</span><strong>@replay.Seed</strong></div>
+                                <div><span>Final rewards</span><strong>@string.Join(" · ", replay.Rewards.Select(value => value.ToString("0")))</strong></div>
+                                <div><span>Season</span><strong>@replay.Days days · @replay.Steps steps</strong></div>
+                                <div><span>Status</span><strong>@string.Join(" · ", replay.Statuses)</strong></div>
+                                <div><span>Size</span><strong>@(replay.SizeBytes / 1024 / 1024) MB</strong></div>
+                            </div>
+                            <button class="evidence-source-tab" @onclick="() => OpenReplay(replay)">
+                                @(SelectedReplay?.Summary.Id == replay.Id ? "Replay loaded" : "Inspect replay")
+                            </button>
+                        </div>
+                    </details>
+                </li>
+            }
+        </ol>
+    }
+
+    <RecordingTimeline Recording="SelectedReplay" SourceLabel="Replay recordings" />
+</div>
+
+@code {
+    private IReadOnlyList<ReplayRecordingSummary> Replays { get; set; } = Array.Empty<ReplayRecordingSummary>();
+    private RecordedMatchDetails? SelectedReplay { get; set; }
+    private string? StatusMessage { get; set; }
+    private bool LoadSucceeded { get; set; }
+
+    protected override async Task OnInitializedAsync() => await LoadReplays();
+
+    private async Task LoadReplays()
+    {
+        try
+        {
+            var json = await Http.GetStringAsync("api/replays");
+            var catalog = JsonSerializer.Deserialize(json, MatchHistoryJsonContext.Default.ReplayCatalog)
+                ?? throw new InvalidOperationException("The replay host returned an empty catalog.");
+            Replays = catalog.Recordings;
+            LoadSucceeded = true;
+            StatusMessage = $"Loaded {Replays.Count} replay files from {catalog.SourceDirectory}.";
+        }
+        catch (Exception exception)
+        {
+            Replays = Array.Empty<ReplayRecordingSummary>();
+            LoadSucceeded = false;
+            StatusMessage = $"The replay catalog could not be loaded: {exception.Message}";
+        }
+    }
+
+    private async Task OpenReplay(ReplayRecordingSummary replay)
+    {
+        try
+        {
+            var json = await Http.GetStringAsync($"api/replays/{Uri.EscapeDataString(replay.Id)}");
+            SelectedReplay = JsonSerializer.Deserialize(json, MatchHistoryJsonContext.Default.RecordedMatchDetails);
+        }
+        catch (Exception exception)
+        {
+            LoadSucceeded = false;
+            StatusMessage = $"The selected replay could not be opened: {exception.Message}";
+        }
+    }
+
+    private static string WinnerText(ReplayRecordingSummary replay)
+    {
+        if (replay.Rewards.Count < 2) return "Unknown result";
+        if (replay.Rewards[0] == replay.Rewards[1]) return "Draw";
+        return replay.Rewards[0] > replay.Rewards[1] ? $"{replay.Agent} wins" : $"{replay.Opponent} wins";
+    }
+}

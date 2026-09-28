@@ -11,7 +11,11 @@ public sealed record ExperimentEvidenceSummary(
     decimal BaselineMeanReward,
     decimal CandidateMeanReward,
     decimal MeanDelta,
-    IReadOnlyList<ExperimentEvidencePair> Pairs);
+    IReadOnlyList<ExperimentEvidencePair> Pairs,
+    string? SourceRevision = null,
+    string? ControlsSummary = null,
+    string? BaselinePolicy = null,
+    string? CandidatePolicy = null);
 
 /// <summary>
 /// A baseline-versus-candidate result for one fixed seed and player seat.
