@@ -19,6 +19,7 @@ namespace DecisionNetworkLab.Client;
 [JsonSerializable(typeof(ExperimentEvidenceSummary))]
 [JsonSerializable(typeof(ExperimentEvidencePair))]
 [JsonSerializable(typeof(ExperimentTracePreview))]
+[JsonSerializable(typeof(ViewerAgentCatalog))]
 internal partial class MatchHistoryJsonContext : JsonSerializerContext
 {
 }

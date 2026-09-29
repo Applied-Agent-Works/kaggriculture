@@ -132,6 +132,78 @@ coordination points.
 - Keep commits and changes narrow enough that another chat can review or
   continue them independently.
 
+## Local run and agent viewer workflow
+
+The Decision Network Lab can review evidence produced by the sibling
+Kaggriculture workspaces. This is a useful discovery surface because other
+agents may add valuable runs, agent definitions, experiments, or replay files
+there.
+
+Keep these source groups separate:
+
+```mermaid
+flowchart LR
+    History["Local match history\nindex.json + match JSON"] --> Viewer["Decision Network Lab viewer"]
+    Replays["Visualizer replays\nreplays/*.json"] --> Viewer
+    Agents["Agent sources and metadata\nagents/ + opponent-experiment/"] -. "provenance only" .-> Viewer
+    Packages["Frozen evidence packages\nmanifest + summaries + traces"] --> Viewer
+```
+
+### Source locations
+
+The current local producer and viewer sources are:
+
+- Match history producer: `D:\Repos\kaggriculture.worktrees\full-simulation-ingest-docs-history`
+- Match-history directory: `D:\Repos\kaggriculture.worktrees\full-simulation-ingest-docs-history\.local_match_history`
+- Agent catalog metadata: `local_match_server.py` in that producer workspace
+- Agent source folders: `agents/` and `opponent-experiment/` in that workspace
+- Visualizer replays: `D:\Repos\kaggle-environments\kaggle_environments\envs\kaggriculture\visualizer\default\replays`
+- Frozen lab package: `labs/decision-network-lab/evaluation/results/`
+
+The producer may rotate `.local_match_history` into
+`.local_archive/<timestamp>/local_match_history`. The viewer is expected to
+fall back to the newest archive snapshot when the live directory is absent.
+Treat archived snapshots as valuable historical evidence; do not delete,
+rename, or reorganize them from the lab.
+
+### How to investigate a new run or agent
+
+1. Start the local viewer from `labs/decision-network-lab` with the Server
+   project, not the client-only project:
+
+   ```powershell
+   dotnet run --project src/DecisionNetworkLab.Server/DecisionNetworkLab.Server.csproj
+   ```
+
+2. Open `http://127.0.0.1:5192/` and use the three evidence tabs:
+   - **Local match history** — who played whom, winner, rewards, seed, and
+     day-by-day recording timeline.
+   - **Replay recordings** — visualizer replay files, reviewed through their
+     separate adapter.
+   - **Frozen evidence packages** — paired baseline/candidate summaries and
+     decompressed decision traces.
+3. For a promising run, record its `id`, `createdAt`, `agent`, `opponent`,
+   `winner`, `seed`, `source`, and recording path before interpreting it.
+4. Inspect the agent metadata and source separately. Descriptions, traits,
+   experiment rounds, and approximation markers explain provenance; they do
+   not prove that a policy won a run.
+5. Compare multiple fixed-seed runs before calling a behavior or agent
+   interesting. One run is an observation, not a conclusion.
+
+### Safety and evidence boundaries
+
+- Read sibling run and agent directories; do not copy their recordings into a
+  lab unless a human explicitly asks for a frozen artifact.
+- Do not execute Python agents from the browser or from the viewer backend.
+- Do not treat a replay as match history, or an agent source file as evidence
+  of behavior.
+- Do not overwrite or “clean up” another agent's run output.
+- If the source directory changes, update the lab Server configuration and the
+  relevant question/architecture log instead of silently hard-coding a new
+  path.
+- When a new agent or run appears, preserve its creator metadata and source
+  provenance in the review surface whenever the format provides it.
+
 ## Documentation style
 
 - Write for a technically curious beginner.

@@ -8,7 +8,11 @@ namespace DecisionNetworkLab.Core;
 /// </summary>
 public static class RecordedMatchReader
 {
-    public static RecordedMatchDetails Read(string json, RecordedMatchSummary summary)
+    public static RecordedMatchDetails Read(
+        string json,
+        RecordedMatchSummary summary,
+        string? rawReplayJson = null,
+        string? viewerUrl = null)
     {
         using var document = JsonDocument.Parse(json);
         if (!document.RootElement.TryGetProperty("steps", out var stepsElement))
@@ -46,7 +50,11 @@ public static class RecordedMatchReader
             .Select(group => new RecordedDay(group.Key, group.ToArray()))
             .ToArray();
 
-        return new RecordedMatchDetails(summary, days);
+        return new RecordedMatchDetails(summary, days)
+        {
+            RawReplayJson = rawReplayJson,
+            ViewerUrl = viewerUrl
+        };
     }
 
     private static RecordedPlayerStep ReadPlayer(JsonElement player, int playerNumber)

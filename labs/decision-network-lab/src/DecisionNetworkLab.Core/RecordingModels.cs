@@ -31,7 +31,11 @@ public sealed record RecordedDay(
 /// </summary>
 public sealed record RecordedMatchDetails(
     RecordedMatchSummary Summary,
-    IReadOnlyList<RecordedDay> Days);
+    IReadOnlyList<RecordedDay> Days)
+{
+    public string? RawReplayJson { get; init; }
+    public string? ViewerUrl { get; init; }
+}
 
 /// <summary>
 /// One replay file listed by the separate replay-recordings source group.

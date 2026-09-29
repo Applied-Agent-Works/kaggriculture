@@ -1,0 +1,32 @@
+@if (IsActive)
+{
+    <div class="simulation-navigation" aria-label="Simulation day navigation">
+        <span class="simulation-navigation-status">Day @CurrentDay</span>
+        <FluentButton Appearance="ButtonAppearance.Outline" Disabled="@(!CanGoPrevious)" @onclick="PreviousDay">Previous day</FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Outline" Disabled="@(!CanGoNext)" @onclick="NextDay">Next day</FluentButton>
+        <FluentButton Appearance="ButtonAppearance.Outline" @onclick="ResetRun">Reset run</FluentButton>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool IsActive { get; set; }
+
+    [Parameter]
+    public int CurrentDay { get; set; }
+
+    [Parameter]
+    public bool CanGoPrevious { get; set; }
+
+    [Parameter]
+    public bool CanGoNext { get; set; }
+
+    [Parameter]
+    public EventCallback PreviousDay { get; set; }
+
+    [Parameter]
+    public EventCallback NextDay { get; set; }
+
+    [Parameter]
+    public EventCallback ResetRun { get; set; }
+}

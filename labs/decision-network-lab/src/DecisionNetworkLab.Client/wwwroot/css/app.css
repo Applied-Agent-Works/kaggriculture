@@ -181,6 +181,16 @@ fluent-select, fluent-slider, fluent-number-input { display: block; width: 100%;
 .recording-player-step { background: #142631; border-left: 3px solid #70b17e; border-radius: 0.35rem; margin-top: 0.45rem; padding: 0.5rem 0.65rem; }
 .recording-player-step code { color: #f0c36a; display: block; font-size: 0.7rem; margin-top: 0.3rem; overflow-wrap: anywhere; white-space: pre-wrap; }
 .recording-player-step p { color: #b6c7d0; font-size: 0.72rem; line-height: 1.35; margin: 0.35rem 0 0; }
+.viewer-agent-catalog { border-bottom: 1px solid #2d4555; margin-bottom: 1rem; padding-bottom: 1rem; }
+.viewer-run-controls { align-items: end; display: grid; gap: 0.65rem; grid-template-columns: 1.4fr 1.4fr 0.55fr 0.7fr auto; margin-bottom: 0.8rem; }
+.viewer-run-controls label { color: #b7d7e5; display: grid; font-size: 0.72rem; font-weight: 700; gap: 0.25rem; }
+.viewer-run-controls select, .viewer-run-controls input { background: #10202b; border: 1px solid #496272; border-radius: 0.35rem; color: #e7edf2; min-width: 0; padding: 0.4rem 0.5rem; }
+.viewer-agent-list { display: grid; gap: 0.35rem; }
+.viewer-agent-item { background: #10202b; border: 1px solid #263c4b; border-radius: 0.35rem; padding: 0.45rem 0.6rem; }
+.viewer-agent-item summary { cursor: pointer; display: flex; gap: 0.7rem; justify-content: space-between; }
+.viewer-agent-item summary strong { color: #d9edf4; font-size: 0.78rem; }
+.viewer-agent-item summary span, .viewer-agent-item p, .viewer-agent-item small { color: #9eb2bf; font-size: 0.72rem; }
+.viewer-agent-item p { line-height: 1.35; margin: 0.5rem 0 0.25rem; }
 .match-history-agent-metadata { border-top: 1px solid #263c4b; display: grid; gap: 0.75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0.85rem; padding-top: 0.75rem; }
 .match-history-agent-metadata > span { color: #9eb2bf; font-size: 0.7rem; grid-column: 1 / -1; }
 .match-history-agent-metadata > div { background: #142631; border-left: 3px solid #70b17e; border-radius: 0.35rem; padding: 0.55rem 0.65rem; }
@@ -229,4 +239,5 @@ fluent-select, fluent-slider, fluent-number-input { display: block; width: 100%;
     .match-history-details { padding-left: 0.9rem; }
     .match-history-facts { grid-template-columns: 1fr; }
     .match-history-agent-metadata { grid-template-columns: 1fr; }
+    .viewer-run-controls { grid-template-columns: 1fr; }
 }

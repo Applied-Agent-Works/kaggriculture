@@ -17,6 +17,9 @@ public sealed record RecordedMatchSummary(
     string Source,
     string RecordingPath)
 {
+    public string? AgentId { get; init; }
+    public string? OpponentId { get; init; }
+
     /// <summary>
     /// Optional metadata describing the agent that produced Player 1.
     /// </summary>
@@ -39,7 +42,13 @@ public sealed record AgentMetadata(
     string? ExperimentRound,
     bool? Approximate,
     string? SourceKind,
-    string? SourcePath);
+    string? SourcePath)
+{
+    public bool? Runnable { get; init; }
+    public string? Version { get; init; }
+    public string? CreatedAt { get; init; }
+    public string? UpdatedAt { get; init; }
+}
 
 /// <summary>
 /// The read-only response returned by the local evidence host.

@@ -1,4 +1,6 @@
 @using DecisionNetworkLab.Core
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
 
 @if (Recording is not null)
 {
@@ -10,6 +12,11 @@
             </div>
             <span class="trace-label">@Recording.Summary.Steps steps · seed @Recording.Summary.Seed</span>
         </div>
+
+        @if (!string.IsNullOrWhiteSpace(Recording.ViewerUrl) && !string.IsNullOrWhiteSpace(Recording.RawReplayJson))
+        {
+            <button class="evidence-source-tab" @onclick="OpenViewer">Open in Kaggriculture viewer</button>
+        }
 
         <div class="recording-controls">
             <label for="recording-day">Review day</label>
@@ -67,5 +74,29 @@
         {
             SelectedDayNumber = Recording.Days.FirstOrDefault()?.Day ?? 0;
         }
+    }
+
+    private async Task OpenViewer()
+    {
+        if (Recording is null || string.IsNullOrWhiteSpace(Recording.ViewerUrl) || string.IsNullOrWhiteSpace(Recording.RawReplayJson))
+        {
+            return;
+        }
+
+        await JS.InvokeVoidAsync(
+            "kaggricultureViewer.openAndSend",
+            Recording.ViewerUrl,
+            Recording.RawReplayJson,
+            new
+            {
+                Agents = new[]
+                {
+                    new { index = 0, name = Recording.Summary.Agent },
+                    new { index = 1, name = Recording.Summary.Opponent }
+                },
+                PlayerLabels = new[] { Recording.Summary.Agent, Recording.Summary.Opponent },
+                PlayerMeta = new[] { Recording.Summary.AgentMetadata, Recording.Summary.OpponentMetadata },
+                OpponentMeta = Recording.Summary.OpponentMetadata
+            });
     }
 }

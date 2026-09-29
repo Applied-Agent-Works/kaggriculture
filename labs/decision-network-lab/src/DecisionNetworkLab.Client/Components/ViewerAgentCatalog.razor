@@ -1,0 +1,100 @@
+@using DecisionNetworkLab.Core
+@using System.Text.Json
+@inject HttpClient Http
+
+<section class="viewer-agent-catalog" aria-labelledby="viewer-agents-title">
+    <div class="evidence-subheading">
+        <h3 id="viewer-agents-title">Registered viewer agents</h3>
+        <span class="trace-label">Stable IDs are used for runs</span>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(StatusMessage))
+    {
+        <p class="evidence-load-message @(Succeeded ? "evidence-load-success" : "evidence-load-error")">@StatusMessage</p>
+    }
+
+    @if (Agents.Count > 0)
+    {
+        <div class="viewer-run-controls">
+            <label>Agent<select @bind="SelectedAgentId">@foreach (var agent in Agents){<option value="@agent.Id">@agent.Label</option>}</select></label>
+            <label>Opponent<select @bind="SelectedOpponentId">@foreach (var agent in Agents){<option value="@agent.Id">@agent.Label</option>}</select></label>
+            <label>Days<input type="number" min="1" max="30" @bind="Days" /></label>
+            <label>Seed<input type="text" @bind="Seed" /></label>
+            <button class="evidence-source-tab" @onclick="RunMatch">Run and save match</button>
+        </div>
+
+        <div class="viewer-agent-list">
+            @foreach (var agent in Agents)
+            {
+                <details class="viewer-agent-item">
+                    <summary><strong>@agent.Label</strong><span>@agent.Id</span></summary>
+                    <p>@agent.Description</p>
+                    <small>@string.Join(" · ", agent.Traits) · @(agent.Approximate is true ? "approximate" : "not marked approximate")</small>
+                </details>
+            }
+        </div>
+    }
+</section>
+
+@code {
+    private IReadOnlyList<AgentMetadata> Agents { get; set; } = Array.Empty<AgentMetadata>();
+    private string? SelectedAgentId { get; set; }
+    private string? SelectedOpponentId { get; set; }
+    private int Days { get; set; } = 30;
+    private string Seed { get; set; } = "42";
+    private string? StatusMessage { get; set; }
+    private bool Succeeded { get; set; }
+
+    protected override async Task OnInitializedAsync() => await LoadAgents();
+
+    private async Task LoadAgents()
+    {
+        try
+        {
+            var json = await Http.GetStringAsync("api/viewer/agents");
+            var catalog = JsonSerializer.Deserialize(json, MatchHistoryJsonContext.Default.ViewerAgentCatalog)
+                ?? throw new InvalidOperationException("The launcher returned an empty agent catalog.");
+            Agents = catalog.Agents.OrderBy(agent => agent.Label).ToArray();
+            SelectedAgentId ??= Agents.FirstOrDefault()?.Id;
+            SelectedOpponentId ??= Agents.Skip(1).FirstOrDefault()?.Id ?? SelectedAgentId;
+            Succeeded = true;
+            StatusMessage = $"Loaded {Agents.Count} registered agents from the launcher.";
+        }
+        catch (Exception exception)
+        {
+            Succeeded = false;
+            StatusMessage = $"The launcher agent catalog could not be loaded: {exception.Message}";
+        }
+    }
+
+    private async Task RunMatch()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedAgentId) || string.IsNullOrWhiteSpace(SelectedOpponentId))
+        {
+            Succeeded = false;
+            StatusMessage = "Choose both an agent and an opponent first.";
+            return;
+        }
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/viewer/run-match", new
+            {
+                agent = SelectedAgentId,
+                opponent = SelectedOpponentId,
+                days = Days,
+                seed = Seed
+            });
+            var body = await response.Content.ReadAsStringAsync();
+            Succeeded = response.IsSuccessStatusCode;
+            StatusMessage = response.IsSuccessStatusCode
+                ? "Match saved by the launcher. Refresh viewer matches to inspect it."
+                : $"The launcher could not run the match: {body}";
+        }
+        catch (Exception exception)
+        {
+            Succeeded = false;
+            StatusMessage = $"The launcher run request failed: {exception.Message}";
+        }
+    }
+}

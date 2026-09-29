@@ -1,12 +1,13 @@
 @using DecisionNetworkLab.Core
 @using System.Text.Json
 @inject HttpClient Http
+@implements IAsyncDisposable
 
 <div class="match-history-catalog">
     <div class="evidence-loader">
         <div>
-            <strong>Local match history</strong>
-            <p>Loaded read-only from the configured local directory. Recordings stay in their existing folder.</p>
+            <strong>Kaggriculture viewer matches</strong>
+            <p>Refreshed from the launcher on port 8767. Stable agent and match IDs are preserved.</p>
         </div>
         <button class="evidence-source-tab" @onclick="LoadFromServer">Refresh runs</button>
     </div>
@@ -19,7 +20,7 @@
     @if (Matches.Count > 0)
     {
         <div class="evidence-subheading">
-            <h3>Recorded matches</h3>
+        <h3>Viewer match history</h3>
             <span class="trace-label">@Matches.Count recordings · newest first</span>
         </div>
 
@@ -97,6 +98,7 @@
     private bool LoadSucceeded { get; set; }
     private string? SourceDirectory { get; set; }
     private RecordedMatchDetails? SelectedRecording { get; set; }
+    private readonly CancellationTokenSource RefreshCancellation = new();
 
     private static string WinnerText(RecordedMatchSummary match) => match.Winner switch
     {
@@ -126,19 +128,36 @@
         var kind = metadata.SourceKind ?? "source kind not recorded";
         var approximation = metadata.Approximate is true ? "approximate" : "not marked approximate";
         var round = string.IsNullOrWhiteSpace(metadata.ExperimentRound) ? "no experiment round" : metadata.ExperimentRound;
-        return $"{kind} · {approximation} · {round} · traits: {traits}";
+        var version = string.IsNullOrWhiteSpace(metadata.Version) ? "no version" : $"v{metadata.Version}";
+        return $"id: {metadata.Id} · {version} · {kind} · {approximation} · {round} · traits: {traits}";
     }
 
     protected override async Task OnInitializedAsync()
     {
         await LoadFromServer();
+        _ = RefreshLoop();
+    }
+
+    private async Task RefreshLoop()
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+        try
+        {
+            while (await timer.WaitForNextTickAsync(RefreshCancellation.Token))
+            {
+                await InvokeAsync(LoadFromServer);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
     }
 
     private async Task LoadFromServer()
     {
         try
         {
-            var json = await Http.GetStringAsync("api/match-history");
+            var json = await Http.GetStringAsync("api/viewer/matches");
             var catalog = JsonSerializer.Deserialize(json, MatchHistoryJsonContext.Default.MatchHistoryCatalog);
             if (catalog is null)
             {
@@ -162,7 +181,7 @@
     {
         try
         {
-            var json = await Http.GetStringAsync($"api/match-history/{Uri.EscapeDataString(match.Id)}");
+            var json = await Http.GetStringAsync($"api/viewer/matches/{Uri.EscapeDataString(match.Id)}");
             SelectedRecording = JsonSerializer.Deserialize(json, MatchHistoryJsonContext.Default.RecordedMatchDetails);
         }
         catch (Exception exception)
@@ -170,5 +189,12 @@
             LoadSucceeded = false;
             StatusMessage = $"The selected recording could not be opened: {exception.Message}";
         }
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        RefreshCancellation.Cancel();
+        RefreshCancellation.Dispose();
+        return ValueTask.CompletedTask;
     }
 }

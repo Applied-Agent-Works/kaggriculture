@@ -9,6 +9,8 @@ var configuredMatchHistoryDirectory = RequireDirectorySetting(builder.Configurat
 var agentCatalogFile = builder.Configuration["MatchHistory:AgentCatalogFile"];
 var replayDirectory = RequireDirectorySetting(builder.Configuration, "Replay:Directory");
 var evidencePackageDirectory = RequireDirectorySetting(builder.Configuration, "Evidence:PackageDirectory");
+var viewerBaseUrl = RequireSetting(builder.Configuration, "Viewer:BaseUrl").TrimEnd('/');
+using var viewerHttpClient = new HttpClient { BaseAddress = new Uri(viewerBaseUrl + "/") };
 var clientWebRoot = Path.GetFullPath(Path.Combine(
     app.Environment.ContentRootPath,
     "..",
@@ -66,6 +68,114 @@ app.MapGet("/api/match-history/{id}", (string id) =>
     {
         return Results.Problem(
             detail: $"The selected match recording could not be read: {exception.Message}",
+            statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+});
+
+app.MapGet("/api/viewer/matches", async () =>
+{
+    try
+    {
+        return Results.Ok(await ReadViewerCatalog(viewerHttpClient, viewerBaseUrl));
+    }
+    catch (Exception exception) when (exception is HttpRequestException or JsonException or InvalidDataException)
+    {
+        return Results.Problem(
+            detail: $"The Kaggriculture launcher could not be read at {viewerBaseUrl}: {exception.Message}",
+            statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+});
+
+app.MapGet("/api/viewer/agents", async () =>
+{
+    try
+    {
+        return Results.Ok(await ReadViewerAgents(viewerHttpClient, viewerBaseUrl));
+    }
+    catch (Exception exception) when (exception is HttpRequestException or JsonException or InvalidDataException)
+    {
+        return Results.Problem(
+            detail: $"The Kaggriculture launcher agent catalog could not be read: {exception.Message}",
+            statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+});
+
+app.MapPost("/api/viewer/run-match", async (ViewerRunRequest request) =>
+{
+    if (string.IsNullOrWhiteSpace(request.Agent)
+        || string.IsNullOrWhiteSpace(request.Opponent)
+        || request.Days is < 1 or > 30
+        || string.IsNullOrWhiteSpace(request.Seed))
+    {
+        return Results.BadRequest("Agent, opponent, days, and seed are required.");
+    }
+
+    var payload = JsonSerializer.Serialize(new
+    {
+        agent = request.Agent,
+        opponent = request.Opponent,
+        days = request.Days,
+        seed = request.Seed
+    });
+    using var content = new StringContent(payload, System.Text.Encoding.UTF8, "application/json");
+    using var response = await viewerHttpClient.PostAsync("api/run-match", content);
+    var responseText = await response.Content.ReadAsStringAsync();
+    return Results.Content(responseText, "application/json", statusCode: (int)response.StatusCode);
+});
+
+app.MapGet("/api/viewer/matches/{id}", async (string id) =>
+{
+    try
+    {
+        var catalog = await ReadViewerCatalog(viewerHttpClient, viewerBaseUrl);
+        var requested = catalog.Matches.FirstOrDefault(match =>
+            string.Equals(match.Id, id, StringComparison.Ordinal));
+        if (requested is null)
+        {
+            return Results.NotFound();
+        }
+
+        using var response = await viewerHttpClient.GetAsync($"api/matches/{Uri.EscapeDataString(id)}");
+        var responseText = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+        {
+            return Results.Problem(
+                detail: $"The launcher returned {(int)response.StatusCode}: {responseText}",
+                statusCode: StatusCodes.Status503ServiceUnavailable);
+        }
+
+        using var document = JsonDocument.Parse(responseText);
+        var root = document.RootElement;
+        var match = root.GetProperty("match");
+        var returnedId = match.GetProperty("id").GetString();
+        if (!string.Equals(returnedId, id, StringComparison.Ordinal))
+        {
+            throw new InvalidDataException("The launcher returned a different match ID than requested.");
+        }
+
+        var replay = root.GetProperty("replay");
+        var steps = replay.GetProperty("steps");
+        var rewards = replay.GetProperty("rewards");
+        var statuses = replay.GetProperty("statuses");
+        if (steps.ValueKind != JsonValueKind.Array
+            || steps.GetArrayLength() != requested.Steps
+            || rewards.ValueKind != JsonValueKind.Array
+            || statuses.ValueKind != JsonValueKind.Array)
+        {
+            throw new InvalidDataException("The launcher replay failed the match metadata validation.");
+        }
+
+        var rawReplay = replay.GetRawText();
+        return Results.Ok(RecordedMatchReader.Read(
+            rawReplay,
+            requested,
+            rawReplay,
+            viewerBaseUrl + "/viewer"));
+    }
+    catch (Exception exception) when (exception is HttpRequestException or JsonException or InvalidDataException or RecordedMatchReadException)
+    {
+        return Results.Problem(
+            detail: $"The selected launcher match could not be loaded: {exception.Message}",
             statusCode: StatusCodes.Status503ServiceUnavailable);
     }
 });
@@ -152,14 +262,118 @@ app.Run();
 
 static string RequireDirectorySetting(IConfiguration configuration, string key)
 {
+    return Path.GetFullPath(RequireSetting(configuration, key));
+}
+
+static string RequireSetting(IConfiguration configuration, string key)
+{
     var value = configuration[key];
     if (string.IsNullOrWhiteSpace(value))
     {
         throw new InvalidOperationException($"Missing required local setting '{key}'.");
     }
 
-    return Path.GetFullPath(value);
+    return value;
 }
+
+static async Task<ViewerMatchCatalog> ReadViewerCatalog(HttpClient client, string baseUrl)
+{
+    var agentCatalog = await ReadViewerAgents(client, baseUrl);
+    var byLabel = agentCatalog.Agents.ToDictionary(agent => agent.Label, StringComparer.Ordinal);
+
+    using var matchesDocument = JsonDocument.Parse(await client.GetStringAsync("api/matches"));
+    if (!matchesDocument.RootElement.TryGetProperty("matches", out var matchesElement))
+    {
+        throw new InvalidDataException("The launcher returned no matches collection.");
+    }
+
+    var matches = matchesElement.EnumerateArray().Select(match =>
+    {
+        var agent = ReadString(match, "agent") ?? "Unknown agent";
+        var opponent = ReadString(match, "opponent") ?? "Unknown opponent";
+        var summary = new RecordedMatchSummary(
+            Id: RequiredExternal(match, "id"),
+            CreatedAt: ReadString(match, "createdAt") ?? string.Empty,
+            Agent: agent,
+            Opponent: opponent,
+            Days: ReadInt(match, "days"),
+            Steps: ReadInt(match, "steps"),
+            Seed: ReadInt(match, "seed"),
+            Rewards: ReadDecimalArray(match, "rewards"),
+            Statuses: ReadStringArray(match, "statuses"),
+            Winner: ReadString(match, "winner"),
+            Source: ReadString(match, "source") ?? "local",
+            RecordingPath: ReadString(match, "path") ?? string.Empty)
+        {
+            AgentId = FindAgentId(byLabel, agent),
+            OpponentId = FindAgentId(byLabel, opponent),
+            AgentMetadata = FindMetadata(byLabel, agent),
+            OpponentMetadata = FindMetadata(byLabel, opponent)
+        };
+        return summary;
+    }).ToArray();
+
+    return new ViewerMatchCatalog(baseUrl, DateTimeOffset.UtcNow, matches);
+}
+
+static async Task<ViewerAgentCatalog> ReadViewerAgents(HttpClient client, string baseUrl)
+{
+    using var agentsDocument = JsonDocument.Parse(await client.GetStringAsync("api/agents"));
+    var agents = agentsDocument.RootElement.TryGetProperty("agents", out var agentsElement)
+        ? agentsElement.EnumerateArray().Select(ReadViewerAgent).ToArray()
+        : Array.Empty<AgentMetadata>();
+    return new ViewerAgentCatalog(baseUrl, DateTimeOffset.UtcNow, agents);
+}
+
+static AgentMetadata ReadViewerAgent(JsonElement element)
+{
+    return new AgentMetadata(
+        Id: ReadString(element, "id") ?? string.Empty,
+        Label: ReadString(element, "label") ?? "Unknown agent",
+        Description: ReadString(element, "description"),
+        Traits: ReadStringArray(element, "traits"),
+        ExperimentRound: ReadString(element, "experiment_round"),
+        Approximate: ReadBool(element, "approximate"),
+        SourceKind: ReadString(element, "source_kind"),
+        SourcePath: ReadString(element, "source_path"))
+    {
+        Runnable = ReadBool(element, "runnable"),
+        Version = ReadString(element, "version"),
+        CreatedAt = ReadString(element, "created_at"),
+        UpdatedAt = ReadString(element, "updated_at")
+    };
+}
+
+static string? FindAgentId(IReadOnlyDictionary<string, AgentMetadata> agents, string label) =>
+    agents.TryGetValue(label, out var agent) ? agent.Id : null;
+
+static string RequiredExternal(JsonElement element, string name) =>
+    ReadString(element, name) ?? throw new InvalidDataException($"The launcher match is missing '{name}'.");
+
+static string? ReadString(JsonElement element, string name) =>
+    element.ValueKind == JsonValueKind.Object && element.TryGetProperty(name, out var value)
+        ? value.GetString()
+        : null;
+
+static int ReadInt(JsonElement element, string name) =>
+    element.ValueKind == JsonValueKind.Object && element.TryGetProperty(name, out var value)
+        && value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out var result) ? result : 0;
+
+static bool? ReadBool(JsonElement element, string name) =>
+    element.ValueKind == JsonValueKind.Object && element.TryGetProperty(name, out var value)
+        && value.ValueKind is JsonValueKind.True or JsonValueKind.False ? value.GetBoolean() : null;
+
+static IReadOnlyList<decimal> ReadDecimalArray(JsonElement element, string name) =>
+    element.ValueKind == JsonValueKind.Object && element.TryGetProperty(name, out var values)
+        && values.ValueKind == JsonValueKind.Array
+        ? values.EnumerateArray().Select(value => value.TryGetDecimal(out var result) ? result : 0m).ToArray()
+        : Array.Empty<decimal>();
+
+static IReadOnlyList<string> ReadStringArray(JsonElement element, string name) =>
+    element.ValueKind == JsonValueKind.Object && element.TryGetProperty(name, out var values)
+        && values.ValueKind == JsonValueKind.Array
+        ? values.EnumerateArray().Select(value => value.GetString() ?? string.Empty).ToArray()
+        : Array.Empty<string>();
 
 static string ResolveMatchHistoryDirectory(string configuredDirectory)
 {
@@ -231,3 +445,5 @@ static AgentMetadata? FindMetadata(IReadOnlyDictionary<string, AgentMetadata> me
 {
     return metadata.TryGetValue(label, out var item) ? item : null;
 }
+
+public sealed record ViewerRunRequest(string Agent, string Opponent, int Days, string Seed);
