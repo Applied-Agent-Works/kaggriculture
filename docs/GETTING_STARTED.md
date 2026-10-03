@@ -4,7 +4,7 @@ This guide walks you through building an agent, testing it locally, and
 submitting it to the Kaggriculture competition on Kaggle.
 
 For the complete game rules, object tables, action definitions, price function,
-and turn-processing order, see [README.md](README.md).
+and turn-processing order, see [README.md](../README.md).
 
 ## Game Overview
 
@@ -54,7 +54,7 @@ An agent receives an observation and returns an action dictionary:
 The observation contains the player index, turn/day/hour, both public farms,
 the player's private shed/seeds/carried inventories, shared market state, and
 active town shops. Both farms are visible, but only the current player's
-private state is visible. Refer to [README.md](README.md) for complete field
+private state is visible. Refer to [README.md](../README.md) for complete field
 and operation definitions.
 
 ## Example: Wheat Loop
@@ -114,7 +114,7 @@ env.render(mode="ipython", width=1200, height=800)
 The repository also includes a lightweight runner:
 
 ```bash
-.venv/bin/python run_match.py --agent main.py --opponent random --steps 720 --seed 42
+.venv/bin/python tools/run_match.py --agent main.py --opponent random --steps 720 --seed 42
 ```
 
 The built-in agents are `pass`, `random`, and `starter`.
@@ -188,7 +188,7 @@ kaggle competitions leaderboard kaggriculture -s
 
 ```bash
 # Test locally with a reproducible seed.
-.venv/bin/python run_match.py --agent main.py --opponent random --steps 720 --seed 42
+.venv/bin/python tools/run_match.py --agent main.py --opponent random --steps 720 --seed 42
 
 # Submit after accepting the competition rules.
 kaggle competitions submit kaggriculture -f main.py -m "v1"

@@ -116,7 +116,7 @@ independent entry points are `agents/wheat/conveyor.py` and
 For example, run the wheat baseline against `pass` with a repeatable seed:
 
 ```bash
-./run_match.py --agent agents/wheat/conveyor.py --opponent pass --steps 720 --seed 42
+./tools/run_match.py --agent agents/wheat/conveyor.py --opponent pass --steps 720 --seed 42
 ```
 
 To compare the two wheat policies on the same seed, change `--agent` to

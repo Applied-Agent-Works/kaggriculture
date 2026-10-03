@@ -171,7 +171,7 @@ agents/
     main_v0.py      # Historical implementation retained for reference
     test_agent_v0.py
 main.py             # Current submission entry point: carrot decision policy
-run_match.py        # Local reproducible match runner
+tools/run_match.py  # Local reproducible match runner
 ```
 
 The two policy modules are intentionally thin. Both expose `agent(obs)`, so
@@ -415,7 +415,7 @@ trade-off against, unconditional planting has not earned its complexity.
 
 ### 8.1 Reproducible simulation
 
-`run_match.py` can provide an explicit episode seed. A comparison holds the
+`tools/run_match.py` can provide an explicit episode seed. A comparison holds the
 following constant unless one is the stated variable under study:
 
 - random seed or fixed seed suite;
@@ -563,7 +563,7 @@ falsifiable parameter change or measurement. It does not replace the belief
 network, utility function, action policy, or simulator.
 
 The full architecture and the evidence contract for that control plane are in
-`foundry-refinement-architecture.md`. The essential boundary is:
+[foundry-refinement-architecture.md](foundry-refinement-architecture.md). The essential boundary is:
 
 ```text
 Foundry may recommend a candidate experiment.
@@ -602,8 +602,10 @@ Humans decide whether the candidate becomes the new baseline.
 7. Follow with tomato and strawberry networks to study scheduled repeated
    yields before adding crop-to-animal production chains.
 
-The first drafts are in [wheat-decision-network.md](wheat-decision-network.md)
-and [melon-decision-network.md](melon-decision-network.md). They use the same
+The first drafts are in
+[wheat-decision-network.md](../decision-networks/wheat-decision-network.md)
+and [melon-decision-network.md](../decision-networks/melon-decision-network.md).
+They use the same
 plant-versus-pass structure while keeping crop facts and market beliefs
 separate.
 

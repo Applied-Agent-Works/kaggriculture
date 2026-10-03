@@ -83,7 +83,7 @@ The current implementation expresses this separation in:
 - `agents/carrot/conveyor.py`: the unconditional comparison policy.
 - `agents/carrot/decision.py`: the belief-based policy and Kaggle `agent(obs)`
   entry point.
-- `carrot-decision-network.md`: the human-readable influence diagram,
+- `../decision-networks/carrot-decision-network.md`: the human-readable influence diagram,
   assumptions, and controlled-experiment rules.
 
 The agent's online decision path is intentionally independent of Foundry. A

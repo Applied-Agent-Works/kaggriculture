@@ -4,15 +4,15 @@ __pycache__/
 *.egg-info/
 .venv/
 .ipynb_checkpoints/
-memoization-experiment/results/
-memoization-experiment/trace-cache/
+experiments/memoization/results/
+experiments/memoization/trace-cache/
 
 # Kaggle credentials / data
 .kaggle/
 kaggle-*.json
 kaggriculture-data/
 
-# Node / Vite / TypeScript (visualizer/default, visualizer/playable)
+# Node / Vite / TypeScript (tools/visualizers/default, tools/visualizers/playable)
 node_modules/
 dist/
 dist-ssr/

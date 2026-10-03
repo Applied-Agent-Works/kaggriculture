@@ -18,10 +18,10 @@ here is imported by `main.py` or selected as a live Kaggle policy.
 Run commands from the repository root, using the project virtual environment:
 
 ```bash
-.venv/bin/python memoization-experiment/profile_step8.py \
+.venv/bin/python experiments/memoization/profile_step8.py \
   --opponent conveyor --seeds 42-44 --record-traces
 
-.venv/bin/python memoization-experiment/profile_step8.py \
+.venv/bin/python experiments/memoization/profile_step8.py \
   --opponent conveyor --seeds 42-44 --replay-traces
 ```
 

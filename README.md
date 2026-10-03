@@ -2,6 +2,38 @@
 
 A farming sim where two players compete to maximize their income from farming by selling to a dynamic market.
 
+## Project Map
+
+This repository brings together the Kaggriculture game, local agents, and
+learning tools for exploring symbolic AI, probability, and decision theory.
+The areas below are related, but they are separate projects and workflows;
+the live game agent does not depend on the labs or visualizers.
+
+- **Game and rules:** [`kaggriculture.py`](kaggriculture.py) implements the
+  game, and [`kaggriculture.json`](kaggriculture.json) contains its
+  configuration. This README remains the reference for game mechanics and the
+  agent interface.
+- **Agents and matches:** [`agents/`](agents/) contains the policies and
+  historical agents. Root [`main.py`](main.py) is the Kaggle submission
+  entry point; [`tools/run_match.py`](tools/run_match.py) runs reproducible
+  local matches.
+- **Learning guides:** [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md)
+  covers setup and workflows. The architecture, AI notes, and crop decision
+  networks are organized under [`docs/`](docs/).
+- **Interactive tools:** [`labs/agent-tuning-studio/`](labs/agent-tuning-studio/)
+  is the planned home for a simulation-driven agent tuning UI.
+  [`labs/decision-network-lab/`](labs/decision-network-lab/) is the existing
+  decision-network teaching lab. [`tools/visualizers/`](tools/visualizers/)
+  contains separate default and playable visualizers; the full-match viewer is
+  intended to remain in its own window.
+- **Experiments and history:** [`experiments/memoization/`](experiments/memoization/)
+  holds match-timing work, [`experiments/tuning-handoffs/`](experiments/tuning-handoffs/)
+  preserves source snapshots and handoff material, and
+  [`agents/archive/`](agents/archive/) retains earlier agents.
+- **Playground:** [`experiments/playground/`](experiments/playground/) contains
+  the introductory Kaggriculture notebook.
+- **Verification:** [`tests/`](tests/) contains the automated tests.
+
 ## Overview
 
 Each player starts with an empty farm and a small amount of income (seed money, if you will). Each turn, they can perform actions such as moving around the board, purchasing seeds or livestock, planting seeds, watering plants, harvesting produce or animal products, and selling that produce at the market. The game runs for a fixed amount of time representing one season, and the winner is determined by who has the most money in the bank at the end.
@@ -373,4 +405,4 @@ Per-crop seed costs and per-product base prices are not configurable; they are d
 ## Getting Started
 
 For building, locally testing, and submitting an agent, see
-[GETTING_STARTED.md](GETTING_STARTED.md).
+[docs/GETTING_STARTED.md](docs/GETTING_STARTED.md).

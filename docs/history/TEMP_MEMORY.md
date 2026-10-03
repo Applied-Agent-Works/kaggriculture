@@ -14,9 +14,9 @@ policy. Candidate changes should be evaluated on fixed-seed local runs.
 
 ## Existing learning documents
 
-- `kaggriculture-ai-notes.md`: logic notation, probability, conditional
+- [`kaggriculture-ai-notes.md`](../learning-notes/kaggriculture-ai-notes.md): logic notation, probability, conditional
   probability, and initial decision-network notes.
-- `carrot-decision-network.md`: focused carrot influence diagram, PASS
+- [`carrot-decision-network.md`](../decision-networks/carrot-decision-network.md): focused carrot influence diagram, PASS
   baseline, experiment axes, and calibration ideas.
 
 The Markdown preview is expected to render Mermaid and TeX/LaTex math.

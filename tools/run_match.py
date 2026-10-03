@@ -12,12 +12,12 @@ Before running this file, activate this project's virtual environment:
 
 Then try a short practice game between two built-in random players:
 
-    ./run_match.py
+    ./tools/run_match.py
 
 When you have written your own agent in main.py, play it against the built-in
 random player for a complete 30-day season (720 turns):
 
-    ./run_match.py --agent main.py --opponent random --steps 720 --seed 42
+    ./tools/run_match.py --agent main.py --opponent random --steps 720 --seed 42
 
 """
 
@@ -36,7 +36,7 @@ from kaggle_environments import make
 
 def main() -> None:
     # Create the command-line interface.  The text here appears when you run
-    # "./run_match.py --help".
+    # "./tools/run_match.py --help".
     parser = argparse.ArgumentParser(description="Run a local Kaggriculture match.")
 
     # --agent is player 0: normally this will be your file, main.py.  For now,

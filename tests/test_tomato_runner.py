@@ -18,7 +18,7 @@ def test_tomato_file_loads_through_local_runner_deterministically():
     root = Path(__file__).resolve().parents[1]
     command = [
         sys.executable,
-        "run_match.py",
+        "tools/run_match.py",
         "--agent",
         "agents/tomato/conveyor.py",
         "--opponent",

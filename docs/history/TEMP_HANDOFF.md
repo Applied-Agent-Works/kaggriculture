@@ -26,19 +26,19 @@ preserved under `agents/archive/`.
 
 ## Existing learning and architecture documents
 
-- `AGENTS.md` — current authoritative working instructions and project state.
-- `README.md` — official game mechanics and crop facts.
-- `kaggriculture-agent-architecture.md` — overall network architecture and
+- [`AGENTS.md`](../../AGENTS.md) — current authoritative working instructions and project state.
+- [`README.md`](../../README.md) — official game mechanics and crop facts.
+- [`kaggriculture-agent-architecture.md`](../architecture/kaggriculture-agent-architecture.md) — overall network architecture and
   current learning sequence.
-- `carrot-decision-network.md` — the completed first crop example.
-- `kaggriculture-ai-notes.md` — introductory logic/probability notes.
-- `foundry-refinement-architecture.md` — intended boundary for future offline
+- [`carrot-decision-network.md`](../decision-networks/carrot-decision-network.md) — the completed first crop example.
+- [`kaggriculture-ai-notes.md`](../learning-notes/kaggriculture-ai-notes.md) — introductory logic/probability notes.
+- [`foundry-refinement-architecture.md`](../architecture/foundry-refinement-architecture.md) — intended boundary for future offline
   Foundry analysis. It describes a design; it does not mean a Foundry agent or
   service is configured in this repository.
 
 ## Current local runner
 
-`run_match.py` accepts `--agent`, `--opponent`, `--steps`, and optional
+[`tools/run_match.py`](../../tools/run_match.py) accepts `--agent`, `--opponent`, `--steps`, and optional
 `--seed`. Use the same seed, configuration, opponent, and seat assignments
 when comparing policies. The default length is one day (24 turns); use 720
 turns for a full season.

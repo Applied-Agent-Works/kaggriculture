@@ -11,7 +11,7 @@ reproducible Kaggriculture matches and separates elapsed wall-clock time into:
 It also collects a cProfile report for the decision agent and writes a small
 timing chart.  Example, from the repository root:
 
-    .venv/bin/python memoization-experiment/profile_step8.py --opponent conveyor --seeds 42
+    .venv/bin/python experiments/memoization/profile_step8.py --opponent conveyor --seeds 42
 
 For a tiny timing sample, use one seed.  Add ``--record-traces`` to save the
 decision observations/actions, then use ``--replay-traces`` to test whether
@@ -45,7 +45,7 @@ from kaggle_environments import make
 # repository first so ``agents`` resolves to this project's policies rather
 # than an unrelated Kaggle-environments module.
 EXPERIMENT_ROOT = Path(__file__).resolve().parent
-PROJECT_ROOT = EXPERIMENT_ROOT.parent
+PROJECT_ROOT = EXPERIMENT_ROOT.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from agents.carrot.conveyor import agent as conveyor_agent
