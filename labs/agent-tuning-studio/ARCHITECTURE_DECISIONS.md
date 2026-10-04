@@ -5,6 +5,7 @@
 | ID | Title | Status | Date |
 |---|---|---|---|
 | ADR-001 | Make the Studio experiment-driven and keep the full-match viewer separate | Accepted | 2026-10-02 |
+| ADR-002 | Prioritize agent/match discovery and coding-agent tools before Foundry interpretation | Accepted | 2026-10-03 |
 
 ## ADR-001 — Make the Studio experiment-driven and keep the full-match viewer separate
 
@@ -32,4 +33,30 @@
 - Evidence: User-approved direction; see the
   [Studio overview](README.md) and
   [open questions](QUESTIONS.md).
+- Supersedes: None
+
+## ADR-002 — Prioritize agent/match discovery and coding-agent tools before Foundry interpretation
+
+- Date: 2026-10-03
+- Status: Accepted
+- Context: The Studio's longer-term role includes connecting run evidence to a
+  Microsoft Foundry agent that can help interpret results and support tuning.
+  However, a useful near-term product must first expose agents, matches, and
+  local simulation/viewer utilities.
+- Decision: Prioritize selecting and inspecting agents and matches in the
+  Studio, and expose needed local operations through actual coding-agent tools.
+  Treat Foundry-based result interpretation as a later advisory capability.
+  Natural-language interaction, the "Beat the baseline" skill, and
+  recommended candidate selections remain exploratory ideas rather than
+  specified requirements.
+- Alternatives considered: Build the Foundry interaction first; build a
+  tuning-only dashboard with no coding-agent tool surface; prescribe a
+  natural-language and skill workflow before the experiment interface exists.
+- Consequences: Near-term work can stay local and prove agent/match discovery,
+  reproducible simulation, evidence, and replay access. Foundry calls are not
+  authorized by this decision: a separate architecture decision must specify
+  provider, budget, evidence flow, and approval boundaries before connection.
+- Evidence: User-approved product refinement; see the
+  [Studio overview](README.md), [implementation plan](IMPLEMENTATION_PLAN.md),
+  and [question log](QUESTIONS.md).
 - Supersedes: None

@@ -11,18 +11,35 @@ This is a new home for that work, not a replacement for the existing
 [Decision Network Lab](../decision-network-lab/). Keep the lab and visualizer
 work intact while identifying which pieces are useful to reuse.
 
+## Product priority
+
+The first practical priority is not a general tuning assistant. It is making
+existing agents and match results selectable and inspectable in one interface,
+with useful local operations available through real coding-agent tools.
+
+The longer-term direction is for this experience to work with a Microsoft
+Foundry agent that helps interpret simulation results and support agent tuning.
+Natural-language requests, the existing "Beat the baseline" skill, and
+suggested candidate selections are possibilities to explore later; they are
+not a defined interaction contract yet.
+
 ## Intended experiment loop
 
 1. Select an existing agent and an opponent.
-2. Inspect the agent's behavior and named tunable parameters, distinct from
-   fixed game facts.
-3. Define a candidate change without losing the baseline values.
-4. Run local simulations with recorded seeds, configuration, opponent, and
-   player positions.
-5. Compare outcomes and relevant behavior, such as final bank, wins, crop
+2. Inspect available agents, their behavior and properties, and existing
+   matches and results.
+3. Use coding-agent tools to perform relevant local operations, such as
+   running matches, retrieving experiment evidence, and opening a match in
+   the separate visualizer.
+4. Inspect the agent's named tunable parameters, distinct from fixed game
+   facts, and define a candidate without losing the baseline values.
+5. Run controlled simulations with recorded seeds, configuration, opponent,
+   and player positions.
+6. Compare outcomes and relevant behavior, such as final bank, wins, crop
    lifecycle counts, sales, and decision counts.
-6. Open the resulting full-match visualization in its own window.
-7. When useful, inspect an interactive decision graph to understand the
+7. Over time, use a Foundry agent to help interpret run results and support
+   tuning decisions, with human review and controlled simulation evidence.
+8. When useful, inspect an interactive decision graph to understand the
    assumptions and decisions behind the agent.
 
 The interface should take shape through real simulation and tuning work. This
@@ -33,6 +50,12 @@ Decision Network Lab.
 
 - The Studio controls and reviews experiments; it is not a replacement for
   the local Python agent or the Kaggriculture game engine.
+- The existing agents and matches should become discoverable and inspectable
+  before investing in broad model-editing or natural-language features.
+- Match-running, artifact-access, and viewer-launch operations should be
+  exposed through actual coding-agent tools when they are needed by an agent;
+  the Studio must not pretend a UI-only action is available to the coding
+  agent.
 - The full-farm, full-match simulation viewer remains a separate window so it
   can use the space needed to show the game.
 - Interactive Mermaid graphs and the look and feel of the existing
@@ -44,8 +67,12 @@ Decision Network Lab.
 - Preserve controlled, reproducible experiments: change one named parameter
   at a time, hold other conditions fixed, and evaluate economic results
   separately from prediction calibration.
-- Keep the workflow local. Do not add cloud services, external model calls, or
-  runtime LLM dependencies.
+- Keep Kaggriculture game-time policies local and independent of Foundry.
+  Foundry is a planned, separate advisory layer for interpreting completed run
+  evidence; it must not choose live game actions or silently mutate policies.
+- Any future Foundry connection is a separate architecture and provider/budget
+  decision. Until explicitly approved, development and evaluation remain local
+  with no external model calls, credentials, or service dependencies.
 - Candidate persistence, parameter metadata, and the exact way the Studio
   launches or links to a replay are still open design questions.
 
@@ -67,13 +94,21 @@ Decision Network Lab.
 
 ## Incremental path
 
-1. Agree on one useful end-to-end experiment and the evidence it must preserve.
-2. Define how an agent exposes its tunable parameters and how a candidate is
-   kept separate from the baseline.
-3. Connect the local UI to reproducible runs of the real simulator.
-4. Present comparisons and provide a way to open the associated match in the
-   separate visualizer.
-5. Add decision-graph inspection where it helps explain actual agent behavior.
+1. Make agents and matches selectable, inspectable, and viewable in the new
+   interface.
+2. Identify the local operations the coding agent needs and expose them as
+   real tools, starting with the smallest useful set for inspecting agents and
+   matches, running a match, and opening its visualization.
+3. Choose one controlled tuning experiment and define how its agent exposes
+   tunable parameters while preserving baseline values.
+4. Compare runs and evidence reproducibly, and connect results to the separate
+   full-match visualizer.
+5. Define a reviewed evidence handoff to a Foundry advisory agent that can
+   interpret runs and support tuning. Explore natural-language interaction,
+   "Beat the baseline," and suggested selections only after the run/evidence
+   workflow is useful.
+6. Add decision-graph inspection where it helps explain actual agent
+   behavior.
 
 These are steps for exploration, not a fixed delivery schedule. This first
 stage establishes the home and records the direction; it adds no application
