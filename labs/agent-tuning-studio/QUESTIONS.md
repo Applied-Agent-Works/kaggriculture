@@ -86,6 +86,54 @@
 
 ## Answered questions
 
+### Q-012 — Should game setup and match display be one surface?
+
+- Asked: 2026-10-06
+- Question: Should selecting/configuring/storing a match and opening that
+  match in the separate visualizer be exposed through one agent surface?
+- Answer: Yes. Merge Match Display into the Matchmaker. Matchmaker now owns
+  match selection, execution, artifact storage/retrieval, replay location,
+  and separate-window display launch. Match Analyzer remains independent.
+- Evidence: [Matchmaker agent](../../.github/agents/kaggriculture-matchmaker.agent.md)
+  and [Matchmaker tool skeleton](tools/matchmaker/).
+- Answered: 2026-10-06
+- Follow-up: Define the display-launch adapter when replay artifacts are
+  available.
+- Status: Answered
+
+### Q-011 — Which development-agent surfaces should be separate?
+
+- Asked: 2026-10-06
+- Question: Should match setup, full-match display, and match analysis be
+  exposed through one general tool or separate agent-facing tools?
+- Answer: Keep them separate. Game Setup owns selecting/configuring/running
+  matches and storing/retrieving artifacts; Match Display owns the separate
+  visualizer window; Match Analyzer owns evidence interpretation and
+  controlled comparisons.
+- Evidence: [surface agents](../../.github/agents/) and
+  [surface skeletons](tools/).
+- Answered: 2026-10-06
+- Follow-up: Bind the artifact contracts after the three surfaces have been
+  exercised independently.
+- Status: Answered
+
+### Q-010 — Which workspace tool mechanism should start the Studio?
+
+- Asked: 2026-10-06
+- Question: Should the initial Studio tool surface use a standalone server or
+  repository-shared VS Code/Copilot workspace customization?
+- Answer: Start with workspace-shared custom agents and instructions, without
+  a standalone server. The first runner is manually invoked, source-editing
+  tools are excluded, and each local match receives a unique output
+  directory.
+- Evidence: [workspace agents](../../.github/agents/),
+  [Studio instructions](../../.github/instructions/agent-tuning-studio.instructions.md),
+  and [`tools/run_isolated_match.py`](tools/run_isolated_match.py).
+- Answered: 2026-10-06
+- Follow-up: Define stronger command enforcement and the broader catalog/tool
+  contract before adding more operations.
+- Status: Answered
+
 ### Q-004 — Should the full-match viewer be embedded in the tuning interface?
 
 - Asked: 2026-10-02

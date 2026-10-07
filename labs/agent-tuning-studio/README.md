@@ -1,7 +1,8 @@
 # Kaggriculture Agent Tuning Studio
 
-**Status: direction and project home established; implementation has not
-started.**
+**Status: direction and project home established; the first workspace-tool
+slice is now available, while the Studio UI and standalone service remain
+unimplemented.**
 
 The Agent Tuning Studio will provide a local interface for selecting
 Kaggriculture agents, inspecting and adjusting their explicit parameters,
@@ -91,6 +92,53 @@ Decision Network Lab.
   game visualizers.
 - [`../../docs/architecture/kaggriculture-agent-architecture.md`](../../docs/architecture/kaggriculture-agent-architecture.md)
   documents the policy and experiment invariants.
+
+## Initial workspace-tool slice
+
+The repository now includes initial VS Code/Copilot workspace agents:
+
+- **Kaggriculture Studio Inspector** is read-only and can inspect agents,
+  Studio records, experiment metadata, match summaries, and replay metadata.
+- **Kaggriculture Studio Experiment Runner** is manually invoked and can run
+  bounded fixed-seed local matches without source-editing tools.
+- **Kaggriculture Matchmaker** and **Kaggriculture Match Analyzer** are
+  separate manually invoked surface contracts. Matchmaker includes the future
+  separate-window display operation; analysis remains independent.
+
+The runner is backed by
+[`tools/run_isolated_match.py`](tools/run_isolated_match.py). Each invocation
+creates a unique ignored directory under `runs/` containing:
+
+- `manifest.json` with the source revision and control inputs;
+- `status.json` with the process result;
+- `stdout.txt` and `stderr.txt` from the local match runner.
+
+Example:
+
+```bash
+.venv/bin/python labs/agent-tuning-studio/tools/run_isolated_match.py \
+  --agent main.py --opponent random --steps 24 --seed 42
+```
+
+This isolates concurrent output files and preserves basic provenance. It is
+not a sandbox for arbitrary Python agent code, and it does not yet provide
+catalog, parameter-editing, replay-launch, or UI capabilities.
+
+## Separate development-agent surfaces
+
+The Studio now reserves two separate development-agent surfaces:
+
+1. **Matchmaker** — select agents and opponents, configure and run matches,
+   store/retrieve records, locate replay artifacts, and open the full-match
+   visualizer in its own window.
+2. **Match Analyzer** — inspect completed evidence, compare controlled runs,
+   and report behavior, economic, and calibration findings.
+
+Each surface has its own workspace agent under
+[`.github/agents/`](../../.github/agents/) and its own skeleton area under
+[`tools/`](tools/). They exchange identified artifacts rather than sharing
+mutable state. Only the Matchmaker runner is implemented so far; display
+launch and analysis remain explicit contracts for future binding.
 
 ## Incremental path
 

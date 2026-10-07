@@ -6,6 +6,7 @@ __pycache__/
 .ipynb_checkpoints/
 experiments/memoization/results/
 experiments/memoization/trace-cache/
+labs/agent-tuning-studio/runs/
 
 # .NET build outputs
 **/bin/

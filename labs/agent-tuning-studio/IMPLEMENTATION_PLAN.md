@@ -60,11 +60,20 @@ agent plug-in architecture.
 
 ### Phase 1 — Expose useful local operations as coding-agent tools
 
-Identify the actual coding-agent tool surface and provide the smallest useful
-operations needed to inspect agents and matches, run a local match, retrieve
-its evidence, and open its visualization. These must be real callable tools
-available to the coding agent, not merely buttons that perform a similar
-action only inside the UI.
+Keep the coding-agent tool surface separated by responsibility:
+
+- **Matchmaker** selects agents, configures and runs local matches, stores and
+  retrieves match records, locates replay artifacts, and opens the full-match
+  visualizer in its own window.
+- **Match Analyzer** retrieves completed evidence and compares controlled
+  runs.
+
+Provide the smallest useful operations needed to inspect agents and matches,
+run a local match, retrieve its evidence, and open its visualization. These
+must be real callable tools available to the coding agent, not merely buttons
+that perform a similar action only inside the UI. The first implementation
+only binds the isolated Matchmaker runner; display launching and analysis
+remain skeleton capabilities until their artifact handoffs are defined.
 
 **Exit criteria**
 
