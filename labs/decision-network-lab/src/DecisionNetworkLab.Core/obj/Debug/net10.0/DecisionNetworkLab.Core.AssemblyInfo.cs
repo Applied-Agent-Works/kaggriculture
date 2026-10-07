@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DecisionNetworkLab.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+56c348224371fe78e241faea78b58cf7e5550042")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
 [assembly: System.Reflection.AssemblyProductAttribute("DecisionNetworkLab.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DecisionNetworkLab.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
