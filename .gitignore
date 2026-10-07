@@ -7,6 +7,10 @@ __pycache__/
 experiments/memoization/results/
 experiments/memoization/trace-cache/
 
+# .NET build outputs
+**/bin/
+**/obj/
+
 # Kaggle credentials / data
 .kaggle/
 kaggle-*.json
