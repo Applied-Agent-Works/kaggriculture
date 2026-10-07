@@ -62,10 +62,13 @@ def main() -> int:
     parser.add_argument("--opponent", default="random")
     parser.add_argument("--steps", type=int, default=24)
     parser.add_argument("--seed", type=int, required=True)
+    parser.add_argument("--seat", type=int, default=0)
     args = parser.parse_args()
 
     if not 1 <= args.steps <= MAX_STEPS:
         parser.error(f"--steps must be between 1 and {MAX_STEPS}")
+    if args.seat not in (0, 1):
+        parser.error("--seat must be 0 or 1")
 
     try:
         agent = _repository_file(args.agent, "agent")
@@ -81,13 +84,17 @@ def main() -> int:
         sys.executable,
         "tools/run_match.py",
         "--agent",
-        agent,
+        agent if args.seat == 0 else opponent,
         "--opponent",
-        opponent,
+        opponent if args.seat == 0 else agent,
         "--steps",
         str(args.steps),
         "--seed",
         str(args.seed),
+        "--report-dir",
+        str(run_directory),
+        "--replay-path",
+        str(run_directory / "replay.json"),
     ]
     manifest = {
         "schema": "kaggriculture-agent-tuning-studio-run/v1",
@@ -97,8 +104,10 @@ def main() -> int:
         "repository": str(REPO_ROOT),
         "agent": agent,
         "opponent": opponent,
+        "seat": args.seat,
         "steps": args.steps,
         "seed": args.seed,
+        "replay_path": "replay.json",
         "command": command,
     }
     _write_json(run_directory / "manifest.json", manifest)

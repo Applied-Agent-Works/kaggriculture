@@ -1,65 +1,359 @@
 @page "/"
 @inject HttpClient Http
+@inject IJSRuntime JS
 
 <PageTitle>Matchmaker</PageTitle>
 
-<h1>Matchmaker</h1>
-<p class="lead">Select agents, preserve match metadata, and hand completed evidence to the separate analyzer.</p>
+<section class="page-heading">
+    <div>
+        <p class="eyebrow">Agent Tuning Studio</p>
+        <h1>Matchmaker</h1>
+        <p class="lead">Manage agents, configure reproducible matches, and inspect their retained evidence.</p>
+    </div>
+    @if (catalog is not null)
+    {
+        <FluentBadge>@catalog.Agents.Count agents · @catalog.Matches.Count matches</FluentBadge>
+    }
+</section>
 
-@if (catalog is null)
+@if (!string.IsNullOrWhiteSpace(notice))
 {
-    <p>Loading Matchmaker...</p>
+    <FluentMessageBar Intent="@(noticeIsError ? MessageBarIntent.Error : MessageBarIntent.Success)">@notice</FluentMessageBar>
+}
+
+@if (loading)
+{
+    <FluentCard Class="loading-card"><FluentSpinner /><span>Loading Matchmaker catalog…</span></FluentCard>
+}
+else if (catalog is null)
+{
+    <FluentMessageBar Intent="MessageBarIntent.Error">@loadError</FluentMessageBar>
+    <FluentButton Appearance="ButtonAppearance.Outline" OnClick="LoadAsync">Retry</FluentButton>
 }
 else
 {
-    <section class="card">
-        <h2>Agents</h2>
-        @if (catalog.Agents.Count == 0)
-        {
-            <p>No agents are registered.</p>
-        }
-        else
-        {
-            <ul>
-                @foreach (var agent in catalog.Agents)
-                {
-                    <li>
-                        <strong>@agent.Label</strong>
-                        <span class="muted">(@agent.Id)</span>
-                        <div>@agent.Description</div>
-                    </li>
-                }
-            </ul>
-        }
-    </section>
+    <FluentCard Class="panel match-editor" aria-labelledby="match-editor-title">
+        <h2 id="match-editor-title">@(editingMatch is null ? "Add Match Record" : "Edit Match Record")</h2>
+        <div class="form-grid">
+            <FluentTextInput Label="Match id" @bind-Value="matchId" Disabled="@(editingMatch is not null)" Required="true" />
+            <FluentSelect TOption="string" TValue="string" Label="Agent" @bind-Value="matchAgent">
+                @foreach (var agent in AvailableAgents) { <FluentOption TOption="string" Value="@agent.Id">@agent.Label (@agent.Id)</FluentOption> }
+            </FluentSelect>
+            <FluentSelect TOption="string" TValue="string" Label="Opponent" @bind-Value="matchOpponent">
+                @foreach (var agent in AvailableAgents) { <FluentOption TOption="string" Value="@agent.Id">@agent.Label (@agent.Id)</FluentOption> }
+            </FluentSelect>
+            <FluentNumberInput TValue="int" Label="Seed" @bind-Value="matchSeed" />
+            <FluentNumberInput TValue="int" Label="Steps" @bind-Value="matchSteps" />
+            <FluentNumberInput TValue="int" Label="Seat (0 or 1)" @bind-Value="matchSeat" />
+            <FluentSelect TOption="string" TValue="string" Label="Status" @bind-Value="matchStatus">
+                <FluentOption TOption="string" Value="@("planned")">planned</FluentOption><FluentOption TOption="string" Value="@("succeeded")">succeeded</FluentOption><FluentOption TOption="string" Value="@("failed")">failed</FluentOption>
+            </FluentSelect>
+            <FluentTextInput Label="Artifact path (optional)" @bind-Value="matchArtifact" />
+        </div>
+        <div class="record-actions"><FluentButton Appearance="ButtonAppearance.Primary" OnClick="SaveMatchAsync">Save match</FluentButton>@if (editingMatch is not null) { <FluentButton Appearance="ButtonAppearance.Outline" OnClick="ResetMatchForm">Cancel edit</FluentButton> }</div>
+    </FluentCard>
 
-    <section class="card">
-        <h2>Matches</h2>
+    <FluentCard Class="panel" aria-labelledby="matches-title">
+        <div class="section-heading">
+            <div><p class="eyebrow">Execution queue</p><h2 id="matches-title">Matches</h2></div>
+        </div>
+        <p class="help-text">A planned record runs through the isolated fixed-seed runner. Each run retains its manifest, evidence, trace, and replay.</p>
         @if (catalog.Matches.Count == 0)
         {
-            <p>No match records are stored yet.</p>
+            <FluentMessageBar Intent="MessageBarIntent.Info">No match records are stored yet.</FluentMessageBar>
         }
-        else
-        {
-            <ul>
-                @foreach (var match in catalog.Matches)
-                {
-                    <li>
-                        <strong>@match.Id</strong>
-                        <span class="muted">@match.Agent vs @match.Opponent, seed @match.Seed</span>
-                        <div>Status: @match.Status</div>
-                    </li>
-                }
-            </ul>
-        }
-    </section>
+        <ul class="match-list">
+            @foreach (var match in catalog.Matches)
+            {
+                <li class="match-row" @key="match.Id">
+                    <div class="match-main">
+                        <div class="record-heading"><strong>@match.Id</strong><FluentBadge>@match.Status</FluentBadge></div>
+                        <p>@match.Agent vs @match.Opponent</p>
+                        <p class="help-text">Seed @match.Seed · @match.Steps steps · seat @match.Seat</p>
+                        @if (!string.IsNullOrWhiteSpace(match.ArtifactPath)) { <p class="help-text">Artifact: @match.ArtifactPath</p> }
+                        @if (!string.IsNullOrWhiteSpace(match.ErrorMessage)) { <FluentMessageBar Intent="MessageBarIntent.Error">@match.ErrorMessage</FluentMessageBar> }
+                        @if (deleteKind == "match" && deleteId == match.Id)
+                        {
+                            <FluentMessageBar Intent="MessageBarIntent.Warning">Remove this catalog record? Match artifacts are kept.</FluentMessageBar>
+                            <div class="record-actions"><FluentButton Appearance="ButtonAppearance.Primary" OnClick="ConfirmDeleteAsync">Remove</FluentButton><FluentButton Appearance="ButtonAppearance.Outline" OnClick="CancelDelete">Cancel</FluentButton></div>
+                        }
+                    </div>
+                    <div class="match-actions">
+                        <FluentButton Appearance="ButtonAppearance.Outline" OnClick="@(() => ViewMatchAsync(match.Id))">@(viewingMatchId == match.Id ? "Hide" : "View")</FluentButton>
+                        <FluentButton Appearance="ButtonAppearance.Primary" Disabled="@(match.Status != "planned")" OnClick="@(() => RunMatchAsync(match.Id))">Run</FluentButton>
+                        <FluentButton Appearance="ButtonAppearance.Outline" Disabled="@(match.Status == "running")" OnClick="@(() => RunInVisualizerAsync(match.Id))">Run in visualizer</FluentButton>
+                        <FluentButton Appearance="ButtonAppearance.Outline" OnClick="@(() => EditMatch(match))">Edit</FluentButton>
+                        <FluentButton Appearance="ButtonAppearance.Outline" OnClick="@(() => AskDelete("match", match.Id))">Remove</FluentButton>
+                    </div>
+                    @if (viewingMatchId == match.Id)
+                    {
+                        <FluentCard Class="match-details">
+                            @if (viewingMatch is null)
+                            {
+                                @if (string.IsNullOrWhiteSpace(matchViewError))
+                                {
+                                    <FluentSpinner />
+                                }
+                                else
+                                {
+                                    <FluentMessageBar Intent="MessageBarIntent.Error">@matchViewError</FluentMessageBar>
+                                }
+                            }
+                            else
+                            {
+                                <h3>Match details</h3>
+                                <dl class="match-detail-list">
+                                    <dt>Match id</dt><dd>@viewingMatch.Id</dd>
+                                    <dt>Status</dt><dd><FluentBadge>@viewingMatch.Status</FluentBadge></dd>
+                                    <dt>Participants</dt><dd>@viewingMatch.Agent vs @viewingMatch.Opponent</dd>
+                                    <dt>Seed · steps · seat</dt><dd>@viewingMatch.Seed · @viewingMatch.Steps · @viewingMatch.Seat</dd>
+                                    <dt>Source revision</dt><dd>@(viewingMatch.SourceRevision ?? "Not recorded")</dd>
+                                    <dt>Exit code</dt><dd>@(viewingMatch.ExitCode?.ToString() ?? "Not available")</dd>
+                                    <dt>Created</dt><dd>@(viewingMatch.CreatedAt?.ToLocalTime().ToString("g") ?? "Not recorded")</dd>
+                                    <dt>Updated</dt><dd>@(viewingMatch.UpdatedAt?.ToLocalTime().ToString("g") ?? "Not recorded")</dd>
+                                    <dt>Artifact</dt><dd class="artifact-value">@(viewingMatch.ArtifactPath ?? "No artifact recorded")</dd>
+                                </dl>
+                                @if (!string.IsNullOrWhiteSpace(viewingMatch.ErrorMessage))
+                                {
+                                    <FluentMessageBar Intent="MessageBarIntent.Error">@viewingMatch.ErrorMessage</FluentMessageBar>
+                                }
+                                @if (viewingMatch.Configuration is { Count: > 0 })
+                                {
+                                    <h4>Configuration</h4>
+                                    <pre class="match-configuration">@System.Text.Json.JsonSerializer.Serialize(viewingMatch.Configuration, new System.Text.Json.JsonSerializerOptions { WriteIndented = true })</pre>
+                                }
+                            }
+                        </FluentCard>
+                    }
+                </li>
+            }
+        </ul>
+    </FluentCard>
+
+    <FluentCard Class="panel" aria-labelledby="agents-title">
+        <div class="section-heading">
+            <div><p class="eyebrow">Participants</p><h2 id="agents-title">Agents</h2></div>
+            <FluentButton Appearance="ButtonAppearance.Primary" OnClick="ResetAgentForm">Add agent</FluentButton>
+        </div>
+        @if (catalog.Agents.Count == 0) { <FluentMessageBar Intent="MessageBarIntent.Info">No agents are registered.</FluentMessageBar> }
+        <div class="record-list">
+            @foreach (var agent in catalog.Agents)
+            {
+                <FluentCard Class="record" @key="agent.Id">
+                    <div class="record-heading"><strong>@agent.Label</strong><FluentBadge>@agent.Kind</FluentBadge></div>
+                    <p>@(string.IsNullOrWhiteSpace(agent.Description) ? "No description." : agent.Description)</p>
+                    <p class="help-text">@agent.Id · @(agent.EntryPoint ?? agent.Id) · @(agent.Traits.Count > 0 ? string.Join(", ", agent.Traits) : "no traits") · @(agent.Available ? "available" : "unavailable")</p>
+                    <div class="record-actions"><FluentButton Appearance="ButtonAppearance.Outline" OnClick="@(() => EditAgent(agent))">Edit</FluentButton><FluentButton Appearance="ButtonAppearance.Outline" OnClick="@(() => AskDelete("agent", agent.Id))">Remove record</FluentButton></div>
+                    @if (deleteKind == "agent" && deleteId == agent.Id)
+                    {
+                        <FluentMessageBar Intent="MessageBarIntent.Warning">Remove the catalog record? Source files are not deleted.</FluentMessageBar>
+                        <div class="record-actions"><FluentButton Appearance="ButtonAppearance.Primary" OnClick="ConfirmDeleteAsync">Remove</FluentButton><FluentButton Appearance="ButtonAppearance.Outline" OnClick="CancelDelete">Cancel</FluentButton></div>
+                    }
+                </FluentCard>
+            }
+        </div>
+        <div class="editor">
+            <h3>@(editingAgent is null ? "Add agent" : "Edit agent")</h3>
+            <div class="form-grid">
+                <FluentTextInput Label="Agent id" @bind-Value="agentId" Disabled="@(editingAgent is not null)" Required="true" />
+                <FluentTextInput Label="Label" @bind-Value="agentLabel" Required="true" />
+                <FluentSelect TOption="string" TValue="string" Label="Kind" @bind-Value="agentKind"><FluentOption TOption="string" Value="@("repository")">repository</FluentOption><FluentOption TOption="string" Value="@("builtin")">builtin</FluentOption></FluentSelect>
+                <FluentTextInput Label="Entry point" @bind-Value="agentEntryPoint" />
+                <FluentTextInput Label="Traits (comma separated)" @bind-Value="agentTraits" />
+                <FluentCheckbox @bind-Value="agentAvailable">Available for new matches</FluentCheckbox>
+                <FluentTextArea Label="Description" @bind-Value="agentDescription" Rows="3" Class="wide-field" />
+            </div>
+            <div class="record-actions"><FluentButton Appearance="ButtonAppearance.Primary" OnClick="SaveAgentAsync">Save agent</FluentButton>@if (editingAgent is not null) { <FluentButton Appearance="ButtonAppearance.Outline" OnClick="ResetAgentForm">Cancel edit</FluentButton> }</div>
+        </div>
+    </FluentCard>
 }
 
 @code {
     private MatchmakerCatalog? catalog;
+    private bool loading = true;
+    private string loadError = "Could not load the Matchmaker catalog.";
+    private string? notice;
+    private bool noticeIsError;
+    private string? editingAgent, editingMatch, deleteKind, deleteId, viewingMatchId, matchViewError;
+    private MatchmakerMatch? viewingMatch;
+    private string agentId = "", agentLabel = "", agentDescription = "", agentTraits = "", agentKind = "repository", agentEntryPoint = "";
+    private bool agentAvailable = true;
+    private string matchId = "", matchAgent = "", matchOpponent = "", matchStatus = "planned", matchArtifact = "";
+    private int matchSeed = 42, matchSteps = 24, matchSeat;
+    private IEnumerable<MatchmakerAgent> AvailableAgents => catalog?.Agents.Where(a => a.Available) ?? [];
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
     {
-        catalog = await Http.GetFromJsonAsync<MatchmakerCatalog>("api/matchmaker/catalog");
+        loading = true;
+        try { catalog = await Http.GetFromJsonAsync<MatchmakerCatalog>("api/matchmaker/catalog"); loadError = "Could not load the Matchmaker catalog."; }
+        catch (Exception ex) { catalog = null; loadError = ex.Message; }
+        finally { loading = false; }
     }
+
+    private async Task<bool> SendAsync(string path, HttpMethod method, object? body = null)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(method, path);
+            if (body is not null) request.Content = JsonContent.Create(body);
+            using var response = await Http.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                var payload = await response.Content.ReadAsStringAsync();
+                try { using var doc = System.Text.Json.JsonDocument.Parse(payload); payload = doc.RootElement.TryGetProperty("error", out var error) ? error.GetString() ?? payload : payload; } catch { }
+                SetNotice(payload, true);
+                return false;
+            }
+            return true;
+        }
+        catch (Exception ex) { SetNotice(ex.Message, true); return false; }
+    }
+
+    private async Task SaveAgentAsync()
+    {
+        var body = new AgentUpsertRequest(agentId.Trim(), agentLabel.Trim(), agentDescription.Trim(), agentTraits.Split(',').Select(t => t.Trim()).Where(t => t.Length > 0).ToArray(), agentKind, string.IsNullOrWhiteSpace(agentEntryPoint) ? null : agentEntryPoint.Trim(), agentAvailable);
+        if (!await SendAsync("api/matchmaker/agents" + (editingAgent is null ? "" : "/" + Uri.EscapeDataString(editingAgent)), editingAgent is null ? HttpMethod.Post : HttpMethod.Put, body)) return;
+        var id = body.Id; await LoadAsync(); ResetAgentForm(); SetNotice($"Agent record '{id}' saved.");
+    }
+
+    private async Task SaveMatchAsync()
+    {
+        var body = new MatchUpsertRequest(matchId.Trim(), matchAgent, matchOpponent, matchSeed, matchSteps, matchSeat, matchStatus, string.IsNullOrWhiteSpace(matchArtifact) ? null : matchArtifact.Trim(), new Dictionary<string, object?>());
+        if (!await SendAsync("api/matchmaker/matches" + (editingMatch is null ? "" : "/" + Uri.EscapeDataString(editingMatch)), editingMatch is null ? HttpMethod.Post : HttpMethod.Put, body)) return;
+        var id = body.Id; await LoadAsync(); ResetMatchForm(); SetNotice($"Match record '{id}' saved.");
+    }
+
+    private void ResetAgentForm() { editingAgent = null; agentId = agentLabel = agentDescription = agentTraits = agentEntryPoint = ""; agentKind = "repository"; agentAvailable = true; }
+    private void EditAgent(MatchmakerAgent a) { editingAgent = a.Id; agentId = a.Id; agentLabel = a.Label; agentDescription = a.Description; agentTraits = string.Join(", ", a.Traits); agentKind = a.Kind; agentEntryPoint = a.EntryPoint ?? ""; agentAvailable = a.Available; }
+    private void ResetMatchForm() { editingMatch = null; matchId = matchAgent = matchOpponent = matchArtifact = ""; matchSeed = 42; matchSteps = 24; matchSeat = 0; matchStatus = "planned"; }
+    private void EditMatch(MatchmakerMatchSummary m) { editingMatch = m.Id; matchId = m.Id; matchAgent = m.Agent; matchOpponent = m.Opponent; matchSeed = m.Seed; matchSteps = m.Steps; matchSeat = m.Seat; matchStatus = m.Status; matchArtifact = m.ArtifactPath ?? ""; }
+    private async Task ViewMatchAsync(string id)
+    {
+        if (viewingMatchId == id)
+        {
+            viewingMatchId = null;
+            viewingMatch = null;
+            matchViewError = null;
+            return;
+        }
+
+        viewingMatchId = id;
+        viewingMatch = null;
+        matchViewError = null;
+        try
+        {
+            viewingMatch = await Http.GetFromJsonAsync<MatchmakerMatch>($"api/matchmaker/matches/{Uri.EscapeDataString(id)}");
+            if (viewingMatch is null) matchViewError = "The match record was not found.";
+        }
+        catch (Exception ex) { matchViewError = ex.Message; }
+    }
+    private void AskDelete(string kind, string id) { deleteKind = kind; deleteId = id; }
+    private void CancelDelete() { deleteKind = deleteId = null; }
+    private async Task ConfirmDeleteAsync()
+    {
+        var kind = deleteKind!; var id = deleteId!; var path = $"api/matchmaker/{(kind == "agent" ? "agents" : "matches")}/{Uri.EscapeDataString(id)}";
+        if (!await SendAsync(path, HttpMethod.Delete)) return;
+        CancelDelete(); await LoadAsync(); SetNotice($"{(kind == "agent" ? "Agent" : "Match")} record '{id}' removed.");
+    }
+    private async Task RunMatchAsync(string id)
+    {
+        var match = await RunPlannedMatchAsync(id);
+        if (match is null) return;
+        SetNotice(match.Status == "succeeded"
+            ? $"Match '{id}' completed."
+            : $"Match '{id}' {match.Status}: {match.ErrorMessage ?? "see the artifact for details."}", match.Status != "succeeded");
+    }
+
+    private async Task<MatchmakerMatch?> RunPlannedMatchAsync(string id)
+    {
+        if (!await SendAsync($"api/matchmaker/matches/{Uri.EscapeDataString(id)}/run", HttpMethod.Post)) return null;
+        SetNotice($"Match '{id}' started.");
+        for (var attempt = 0; attempt < 600; attempt++)
+        {
+            await Task.Delay(500);
+            var match = await Http.GetFromJsonAsync<MatchmakerMatch>($"api/matchmaker/matches/{Uri.EscapeDataString(id)}");
+            if (match is null) return null;
+            await LoadAsync();
+            if (match.Status != "running") return match;
+        }
+        SetNotice($"Match '{id}' is still running. Refresh to check its status.", true);
+        return null;
+    }
+
+    private async Task RunInVisualizerAsync(string id)
+    {
+        try
+        {
+            // Reserve the named window immediately in the click gesture so the
+            // browser does not treat later async navigation as a popup.
+            await JS.InvokeVoidAsync("matchmakerVisualizer.reserve");
+            var match = await Http.GetFromJsonAsync<MatchmakerMatch>($"api/matchmaker/matches/{Uri.EscapeDataString(id)}");
+            if (match is null)
+            {
+                SetNotice($"Match '{id}' could not be found.", true);
+                return;
+            }
+
+            if (match.Status == "running")
+            {
+                SetNotice($"Match '{id}' is already running. Try again when it finishes.", true);
+                return;
+            }
+
+            var replayPath = $"api/matchmaker/matches/{Uri.EscapeDataString(id)}/replay";
+            if (match.Status == "planned")
+            {
+                match = await RunPlannedMatchAsync(id);
+                if (match is null) return;
+            }
+            else
+            {
+                using var existingReplay = await Http.GetAsync(replayPath);
+                if (!existingReplay.IsSuccessStatusCode)
+                {
+                    // Older records may predate replay retention. Rerun the
+                    // same controls to generate a replay without deleting the
+                    // original run artifact.
+                    SetNotice($"Match '{id}' has no retained replay. Rerunning its recorded controls to create one.");
+                    var planned = new MatchUpsertRequest(match.Id, match.Agent, match.Opponent, match.Seed, match.Steps, match.Seat,
+                        "planned", null, match.Configuration ?? new Dictionary<string, object?>());
+                    if (!await SendAsync($"api/matchmaker/matches/{Uri.EscapeDataString(id)}", HttpMethod.Put, planned)) return;
+                    match = await RunPlannedMatchAsync(id);
+                    if (match is null) return;
+                }
+            }
+
+            using var replayResponse = await Http.GetAsync(replayPath);
+            if (!replayResponse.IsSuccessStatusCode)
+            {
+                SetNotice($"Match '{id}' finished with status '{match.Status}' but has no replay to display.", true);
+                return;
+            }
+
+            var replay = await replayResponse.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+            var visualizer = await Http.GetFromJsonAsync<VisualizerLaunch>("api/matchmaker/visualizer");
+            if (replay.ValueKind == System.Text.Json.JsonValueKind.Undefined || visualizer is null)
+            {
+                SetNotice("The match replay or visualizer launch details could not be loaded.", true);
+                return;
+            }
+
+            await JS.InvokeVoidAsync("matchmakerVisualizer.open", visualizer.Url, visualizer.ParentOrigin, id, replay);
+            SetNotice($"Match '{id}' opened in the visualizer.");
+        }
+        catch (Exception error)
+        {
+            SetNotice(error.Message, true);
+        }
+        finally
+        {
+            await JS.InvokeVoidAsync("matchmakerVisualizer.closeReserved");
+        }
+    }
+    private void SetNotice(string text, bool error = false) { notice = text; noticeIsError = error; }
+    private void ClearNotice() => notice = null;
+
+    private sealed record VisualizerLaunch(string Url, string ParentOrigin);
 }

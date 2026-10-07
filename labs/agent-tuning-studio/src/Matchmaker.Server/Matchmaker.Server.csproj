@@ -7,5 +7,19 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Matchmaker.Core\Matchmaker.Core.csproj" />
+    <ProjectReference Include="..\Matchmaker.Client\Matchmaker.Client.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
+
+  <PropertyGroup>
+    <ClientBundleRoot>$(MSBuildProjectDirectory)\..\Matchmaker.Client\bin\$(Configuration)\net10.0\publish\wwwroot</ClientBundleRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ClientSourceFiles Include="..\Matchmaker.Client\**\*.razor;..\Matchmaker.Client\**\*.cs;..\Matchmaker.Client\**\*.css;..\Matchmaker.Client\**\*.html;..\Matchmaker.Client\**\*.json" Exclude="..\Matchmaker.Client\bin\**;..\Matchmaker.Client\obj\**" />
+  </ItemGroup>
+
+  <Target Name="EnsureClientBundle" BeforeTargets="Build" Inputs="@(ClientSourceFiles)" Outputs="$(ClientBundleRoot)\index.html">
+    <Exec Command="dotnet publish &quot;$(MSBuildProjectDirectory)\..\Matchmaker.Client\Matchmaker.Client.csproj&quot; -c $(Configuration) --no-restore" />
+  </Target>
+
 </Project>

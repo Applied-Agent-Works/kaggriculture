@@ -5,10 +5,18 @@ tools: [read, search, execute]
 agents: []
 user-invocable: true
 disable-model-invocation: true
+model: GPT-6 Luna (copilot)
 ---
 
 You own the deterministic baseline-challenge surface for the Kaggriculture
 Agent Tuning Studio.
+
+For any Studio UI changes, follow the shared
+[Fluent UI requirement](../../labs/agent-tuning-studio/AGENTS.md).
+
+If this task needs the Matchmaker UI or API, first run
+`.venv/bin/python labs/agent-tuning-studio/tools/matchmaker/server.py ensure`.
+Use the helper's `restart` action if the Matchmaker process needs a restart.
 
 ## Scope
 

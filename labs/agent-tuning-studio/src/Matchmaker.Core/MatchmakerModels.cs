@@ -22,6 +22,8 @@ public sealed record MatchmakerMatch(
     string? ArtifactPath = null,
     string? SourceRevision = null,
     IReadOnlyDictionary<string, object?>? Configuration = null,
+    string? ErrorMessage = null,
+    int? ExitCode = null,
     DateTimeOffset? CreatedAt = null,
     DateTimeOffset? UpdatedAt = null);
 
@@ -34,6 +36,7 @@ public sealed record MatchmakerMatchSummary(
     int Seat,
     string Status,
     string? ArtifactPath = null,
+    string? ErrorMessage = null,
     DateTimeOffset? UpdatedAt = null);
 
 public sealed record MatchmakerStatus(

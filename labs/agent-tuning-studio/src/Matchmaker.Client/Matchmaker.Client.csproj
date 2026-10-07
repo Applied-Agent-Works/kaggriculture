@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.12" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.12" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.FluentUI.AspNetCore.Components" Version="5.0.0" />
     <ProjectReference Include="..\Matchmaker.Core\Matchmaker.Core.csproj" />
   </ItemGroup>
 </Project>

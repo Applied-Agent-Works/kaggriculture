@@ -10,6 +10,18 @@ applyTo: "labs/agent-tuning-studio/**"
 - Unless told otherwise keep code clean and ask permission to install packages. in general fewer external packages is easier to read.
 - Readability is very important
 - Keep Studio coordination and tooling under `labs/agent-tuning-studio/`.
+- All Agent Tuning Studio controls and data-management screens must use Fluent
+  UI for Blazor. Use Fluent components for interactive controls, status
+  indicators, cards, progress, and messages. Do not introduce a second control
+  library or hand-built HTML controls. Semantic layout and typography may use
+  HTML and local CSS. The separate full-match visualizer remains its own
+  specialized visualization surface.
+- Put Studio UI work in `src/Matchmaker.Client/` and keep the server's
+  `wwwroot` free of a parallel hand-built application UI.
+- Before using the Matchmaker UI or API, run
+  `.venv/bin/python labs/agent-tuning-studio/tools/matchmaker/server.py ensure`.
+  It checks health and starts the local server when it is unavailable;
+  use its `restart` action when a restart is needed.
 - Keep the game-time agent local and independent of Studio tooling.
 - Treat game rules as fixed facts; expose only declared beliefs and policy
   preferences as experiment inputs.

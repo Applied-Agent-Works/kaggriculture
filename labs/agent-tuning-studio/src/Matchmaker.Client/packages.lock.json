@@ -33,6 +33,16 @@
         "resolved": "10.0.112",
         "contentHash": "1k5ylG+88HAS1Gy72U6BXo+TVGkdGSMsKeaf3shHs46JuxwSbT8adKMcv22XWEi6ERr/blPZJc8tb49LtasLGQ=="
       },
+      "Microsoft.FluentUI.AspNetCore.Components": {
+        "type": "Direct",
+        "requested": "[5.0.0, )",
+        "resolved": "5.0.0",
+        "contentHash": "CIfl4z7wZ0u3Sks9e2PJfKSei7tIbx5Y+wvYwMpA0ETxP8ibnGt2XY3YTiWaBG2jafJpY6UpYYdWrJKKPzTuZg==",
+        "dependencies": {
+          "Microsoft.AspNetCore.Components.Web": "10.0.12",
+          "Microsoft.Extensions.Http": "10.0.12"
+        }
+      },
       "Microsoft.NET.ILLink.Tasks": {
         "type": "Direct",
         "requested": "[10.0.12, )",
@@ -199,6 +209,19 @@
         "type": "Transitive",
         "resolved": "10.0.12",
         "contentHash": "45cV+UeI0chPAIXrx9Wv7K4PJXuuIR2pnOur5MOAo6kOFclBHSLLDrvGAxMfWRMtUvpv/kQZkxlgaUN56jwzSQ=="
+      },
+      "Microsoft.Extensions.Http": {
+        "type": "Transitive",
+        "resolved": "10.0.12",
+        "contentHash": "x/fnoUGgmIUjSgLR1p6Mpi/vXc1Xe0xDPJnggPp23I6vwM/kY4nxyOjo8i6G5KPVw+esJM+rJsqnHbdjasvCBw==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.12",
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.12",
+          "Microsoft.Extensions.Diagnostics": "10.0.12",
+          "Microsoft.Extensions.Logging": "10.0.12",
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.12",
+          "Microsoft.Extensions.Options": "10.0.12"
+        }
       },
       "Microsoft.Extensions.Logging": {
         "type": "Transitive",

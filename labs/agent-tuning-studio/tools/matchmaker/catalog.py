@@ -279,7 +279,86 @@ def build_parser() -> argparse.ArgumentParser:
     update_match.add_argument("--artifact-path", dest="artifact_path")
     match_delete = match_commands.add_parser("delete")
     match_delete.add_argument("record_id")
+    match_run = match_commands.add_parser("run")
+    match_run.add_argument("record_id")
     return parser
+
+
+def run_match(record: dict[str, Any], store: Catalog) -> dict[str, Any]:
+    if record.get("status") != "planned":
+        raise ValueError(
+            f"only planned matches can be run; {record.get('id')!r} is {record.get('status')!r}."
+        )
+
+    agents = {item.get("id"): item for item in store.agents()}
+    selected = [agents.get(record.get("agent")), agents.get(record.get("opponent"))]
+    if any(item is None for item in selected):
+        raise ValueError("both match participants must refer to catalog agent ids.")
+    if any(not item.get("available", False) for item in selected if item is not None):
+        raise ValueError("both match participants must be available.")
+    if any(not item.get("entryPoint") for item in selected if item is not None):
+        raise ValueError("both match participants must have executable entry points.")
+
+    running = dict(record)
+    running["status"] = "running"
+    running["sourceRevision"] = source_revision()
+    running["errorMessage"] = None
+    running["exitCode"] = None
+    running["updatedAt"] = now()
+    store.save_matches([running if item.get("id") == record["id"] else item for item in store.matches()])
+
+    command = [
+        str(REPO_ROOT / ".venv" / "bin" / "python"),
+        str(REPO_ROOT / "labs" / "agent-tuning-studio" / "tools" / "run_isolated_match.py"),
+        "--agent",
+        str(selected[0]["entryPoint"]),
+        "--opponent",
+        str(selected[1]["entryPoint"]),
+        "--steps",
+        str(record["steps"]),
+        "--seed",
+        str(record["seed"]),
+        "--seat",
+        str(record["seat"]),
+    ]
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError as error:
+        running["status"] = "failed"
+        running["errorMessage"] = f"could not start the local runner: {error}"
+        running["exitCode"] = -1
+        running["updatedAt"] = now()
+        store.save_matches([running if item.get("id") == record["id"] else item for item in store.matches()])
+        raise RuntimeError(running["errorMessage"]) from error
+
+    artifact_path = next(
+        (
+            line.strip()
+            for line in completed.stdout.splitlines()
+            if line.strip().startswith("labs/agent-tuning-studio/runs/")
+        ),
+        None,
+    )
+    error_message = None
+    if completed.returncode != 0:
+        error_message = next(
+            (line.strip() for line in completed.stderr.splitlines() if line.strip()),
+            None,
+        ) or f"the local runner exited with code {completed.returncode}."
+
+    running["status"] = "succeeded" if completed.returncode == 0 else "failed"
+    running["artifactPath"] = artifact_path or running.get("artifactPath")
+    running["errorMessage"] = error_message
+    running["exitCode"] = completed.returncode
+    running["updatedAt"] = now()
+    store.save_matches([running if item.get("id") == record["id"] else item for item in store.matches()])
+    return running
 
 
 def run(args: argparse.Namespace) -> None:
@@ -335,6 +414,11 @@ def run(args: argparse.Namespace) -> None:
             raise ValueError("both --agent and --opponent must refer to catalog agent ids.")
         store.save_matches([updated if item.get("id") == record_id else item for item in records] if existing else records + [updated])
         print_json(updated)
+    elif args.command == "run":
+        record = find(records, args.record_id)
+        if record is None:
+            raise ValueError(f"no match record exists for {args.record_id!r}.")
+        print_json(run_match(record, store))
     else:
         if find(records, args.record_id) is None:
             raise ValueError(f"no match record exists for {args.record_id!r}.")

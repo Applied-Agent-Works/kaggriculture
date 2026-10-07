@@ -79,12 +79,53 @@
   experiment result to the full-match viewer in its own window?
 - Why it matters: The Studio should not embed the whole farm view, but the
   user should be able to move from a comparison to the corresponding match.
-- Current evidence: The repository has local match-running and visualization
-  components, but no integrated launch contract.
-- Owner or next step: Define alongside the first simulator integration.
-- Status: Open
+- Answer: Open replay-specific URLs in one named visualizer window. The
+  browser creates that window when absent and reuses it when present. If the
+  local visualizer host is unavailable, Matchmaker should start it before
+  opening the replay.
+- Evidence: User decision in this session; the isolated runner now saves raw
+  replay JSON alongside its manifest and evidence report.
+- Answered: 2026-10-06
+- Follow-up: Implemented in Matchmaker. Its **Run in visualizer** action runs
+  a planned record first, then sends retained replay JSON to one reusable
+  full-match visualizer window. Older records without a replay are rerun from
+  their stored controls to produce one; existing artifacts remain on disk.
+  The local Vite host starts on demand and uses the repository visualizer
+  source with shared `@kaggle-environments/core` dependencies from a nearby
+  Kaggle Environments checkout.
+- Status: Answered
 
 ## Answered questions
+
+### Q-015 — Which UI component system should the Studio use?
+
+- Asked: 2026-10-06
+- Question: Should Agent Tuning Studio screens continue with custom HTML and
+  JavaScript controls, or use the existing Fluent UI for Blazor system?
+- Answer: All Agent Tuning Studio application controls and
+  data-management screens use Fluent UI for Blazor. The separate full-match
+  visualizer remains its own specialized visualization surface.
+- Evidence: User direction in this session and [ADR-012](ARCHITECTURE_DECISIONS.md).
+- Answered: 2026-10-06
+- Follow-up: Completed. The Matchmaker controls and data-management screens
+  now live in the Fluent UI Blazor client, and the server hosts its built
+  output.
+- Status: Answered
+
+### Q-016 — How should agents ensure the Matchmaker server is available?
+
+- Asked: 2026-10-06
+- Question: Should each agent launch or check the Matchmaker server
+  independently, or should the repository provide one shared helper?
+- Answer: Provide one shared helper that verifies the Matchmaker health
+  endpoint, starts a detached local loopback server only when needed, and can
+  restart a process it previously launched. Make its lifecycle commands
+  discoverable in common and agent-specific instructions.
+- Evidence: [server helper](tools/matchmaker/server.py), [tool guide](tools/matchmaker/README.md),
+  and [ADR-013](ARCHITECTURE_DECISIONS.md).
+- Answered: 2026-10-06
+- Follow-up: None
+- Status: Answered
 
 ### Q-013 — Should deterministic baseline challenges be a separate surface?
 
@@ -194,4 +235,26 @@
 - Answered: 2026-10-03
 - Follow-up: Define the reviewed evidence, provider/budget, and data-flow
   contract before making any external connection; see Q-008.
+- Status: Answered
+
+### Q-014 — What is the first executable Matchmaker operation?
+
+- Asked: 2026-10-07
+- Question: How should a selected Matchmaker record become a reproducible
+  local run?
+- Answer: Require an explicit run operation for a `planned` record. The
+  server and CLI mark it `running`, invoke the existing isolated fixed-seed
+  runner, and persist the terminal status, unique artifact path, exit code,
+  and error message. A seat of `1` swaps simulator player order without
+  changing the catalog roles.
+- Evidence: [Matchmaker server](src/Matchmaker.Server/Program.cs),
+  [isolated runner](tools/run_isolated_match.py), and
+  [Matchmaker CLI](tools/matchmaker/catalog.py).
+- Answered: 2026-10-07
+- Follow-up: The CLI and server run paths were exercised with one-step
+  fixed-seed matches. They retain the manifest, status, evidence report,
+  decision trace, and raw `env.toJSON()` replay. Q-003 now defines the
+  separate-window behavior, and the server exposes a safe replay endpoint;
+  bind the existing visualizer to that endpoint and implement on-demand host
+  startup.
 - Status: Answered

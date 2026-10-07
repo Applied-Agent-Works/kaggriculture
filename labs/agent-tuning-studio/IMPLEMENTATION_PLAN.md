@@ -1,7 +1,7 @@
 # Agent Tuning Studio — Implementation Plan
 
-**Status:** planning; the first Matchmaker server, UI, and local catalog
-slice is implemented.
+**Status:** the first Matchmaker server, UI, local catalog, and explicit
+planned-match execution slice are implemented.
 
 This plan turns the product direction in the
 [Studio overview](README.md) into small, evidence-driven steps. It is a
@@ -29,8 +29,11 @@ game dashboard.
 - Expose needed operations such as running simulations and opening the
   visualizer through real coding-agent tools, not only UI controls.
 - Do not carry over the existing lab's lesson-first screens by default.
-- Treat the existing Blazor/Fluent UI presentation and interactive Mermaid
-  graphs as useful references, not required implementation choices.
+- Use Fluent UI for Blazor for every Agent Tuning Studio control and
+  data-management screen. Keep the separate full-match visualizer as its own
+  specialized visualization surface.
+- Reuse interactive Mermaid graphs only where they help explain actual agent
+  behavior.
 - Preserve fixed game rules as facts; expose only declared beliefs and policy
   preferences as tunable values.
 - Keep Kaggriculture's game-time agent local and independent of Foundry.
@@ -75,9 +78,10 @@ Provide the smallest useful operations needed to inspect agents and matches,
 run a local match, retrieve its evidence, and open its visualization. These
 must be real callable tools available to the coding agent, not merely buttons
 that perform a similar action only inside the UI. The first implementation
-now binds the isolated runner and local agent/match catalog CRUD. Display
-launching and analysis remain skeleton capabilities until their artifact
-handoffs are defined.
+now binds the isolated runner, local agent/match catalog CRUD, and an
+explicit planned-match execution operation. Matchmaker now opens retained
+replays in the separate visualizer; analysis remains a skeleton capability
+until its evidence handoff is defined.
 
 The Beat the Baseline comparison runner now also retains descriptive
 per-match evidence and pre-action decision traces. It intentionally reports
@@ -136,9 +140,9 @@ edit a candidate, choose the agreed run controls, launch the experiment, and
 show its status. Begin with a narrow adapter for the chosen agent rather than
 designing a universal plug-in system in advance.
 
-The UI technology remains open. Choose it after checking the local process
-launch, simulator integration, and separate-viewer needs against the
-maintenance cost of reusing the existing Blazor/Fluent UI lab.
+Use the existing Blazor client with Fluent UI components. Keep the server API
+and local match execution boundaries unchanged while moving controls out of
+the earlier static HTML/JavaScript page.
 
 **Exit criteria**
 
@@ -241,7 +245,5 @@ implementation decisions depend on:
    and defaults without parsing arbitrary source code?
 6. What evidence and approvals would a future Foundry interpretation workflow
    require?
-7. Which local UI technology best supports the first complete workflow?
-
 Resolve only the questions needed for the next phase; leave later choices open
 until evidence makes them relevant.

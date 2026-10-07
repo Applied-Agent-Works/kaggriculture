@@ -45,6 +45,9 @@ The current implementation is deliberately narrow:
   probability tables have not been added.
 - Root `main.py` is the Kaggle submission entry point for the decision policy.
 - `tools/run_match.py` runs local matches and accepts `--seed` for reproducibility.
+- The local Matchmaker server can be health-checked or started for repository
+  agents with `.venv/bin/python labs/agent-tuning-studio/tools/matchmaker/server.py ensure`;
+  use the helper's `restart` action when it must be restarted.
 - `agents/archive/` retains historical implementations; do not delete them
   without explicit user approval.
 

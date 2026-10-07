@@ -1,8 +1,8 @@
 # Kaggriculture Agent Tuning Studio
 
-**Status: direction and project home established; workspace tools and the
-first persisted tuning-session workflow are available, while the Studio UI
-and standalone service remain unimplemented.**
+**Status: direction and project home established; workspace tools, the local
+Matchmaker UI/service, and the first persisted tuning-session workflow are
+available.**
 
 The Agent Tuning Studio will provide a local interface for selecting
 Kaggriculture agents, inspecting and adjusting their explicit parameters,
@@ -58,10 +58,11 @@ Decision Network Lab.
   agent.
 - The full-farm, full-match simulation viewer remains a separate window so it
   can use the space needed to show the game.
-- Interactive Mermaid graphs and the look and feel of the existing
-  Blazor/Fluent UI lab are useful design references. Reuse should be based on
-  demonstrated value; neither the full existing UI nor its framework is
-  mandated here.
+- All Agent Tuning Studio controls and data-management screens use Fluent UI
+  for Blazor. Keep the separate full-match visualizer as its own specialized
+  visualization surface.
+- Interactive Mermaid graphs from the Decision Network Lab are design
+  references; reuse them only where they help explain actual agent behavior.
 - Keep game rules, uncertain beliefs, and policy preferences distinguishable.
   Game rules are not tuning parameters.
 - Preserve controlled, reproducible experiments: change one named parameter
@@ -110,6 +111,7 @@ creates a unique ignored directory under `runs/` containing:
 
 - `manifest.json` with the source revision and control inputs;
 - `status.json` with the process result;
+- `replay.json` with the raw Kaggle environment replay;
 - `stdout.txt` and `stderr.txt` from the local match runner.
 
 Example:
@@ -125,12 +127,21 @@ not a sandbox for arbitrary Python agent code.
 The Matchmaker catalog now provides local CRUD for agent and match metadata.
 The catalog is stored under the ignored `catalog/` directory and is also
 available through the local Matchmaker server. Record deletion never removes
-agent source or match artifacts; match records preserve controls and source
-revision but do not run the simulator.
+agent source or match artifacts. Match records preserve controls and source
+revision; a planned match runs only after the explicit `matches run <id>` CLI
+command or the matching server operation is requested.
+
+Before using the Matchmaker UI or API, any Studio agent can run
+`.venv/bin/python labs/agent-tuning-studio/tools/matchmaker/server.py ensure`.
+It reuses a healthy instance or starts the local server at port 5190 and waits
+for the health endpoint. The detached process remains running after the agent
+exits. `server.py status` checks without starting it; `server.py restart`
+restarts the Matchmaker instance when needed. The helper prints a browser URL
+using the host's active private network address.
 
 ## Separate development-agent surfaces
 
-The Studio now reserves two separate development-agent surfaces:
+The Studio now reserves three separate development-agent surfaces:
 
 1. **Matchmaker** — select agents and opponents, configure and run matches,
    store/retrieve records, locate replay artifacts, and open the full-match
@@ -143,11 +154,11 @@ The Studio now reserves two separate development-agent surfaces:
 Each surface has its own workspace agent under
 [`.github/agents/`](../../.github/agents/) and its own skeleton area under
 [`tools/`](tools/). They exchange identified artifacts rather than sharing
-mutable state. The Matchmaker runner, local catalog CRUD, and Beat the
-Baseline comparison runner are implemented. Beat the Baseline also includes
-the first parameterized session runner for repeated carrot, wheat, and melon
-rounds; display launch and analysis remain explicit contracts for future
-binding.
+mutable state. The Matchmaker runner, planned-match execution, local catalog
+CRUD, replay launch in the separate visualizer, and Beat the Baseline
+comparison runner are implemented. Beat the Baseline also includes the first
+parameterized session runner for repeated carrot, wheat, and melon rounds;
+analysis remains an explicit contract for future binding.
 
 Beat the Baseline child runs also retain descriptive evidence under each
 match directory: action and decision counts, observed crop lifecycle events,

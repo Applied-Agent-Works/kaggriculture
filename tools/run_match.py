@@ -28,6 +28,7 @@ from __future__ import annotations
 # argparse is part of Python's standard library.  It reads options that we
 # type after the command, such as --steps 720.
 import argparse
+import json
 
 # kaggle_environments is the package that contains the local game simulator.
 # "make" creates one game environment for us to run.
@@ -130,6 +131,12 @@ def main() -> None:
         default=None,
         help="Optional directory for descriptive match evidence and decision traces.",
     )
+    parser.add_argument(
+        "--replay-path",
+        type=Path,
+        default=None,
+        help="Optional path for saving the complete Kaggle replay JSON.",
+    )
 
     # Turn the command-line text into Python values.  For example,
     # "--steps 720" becomes args.steps == 720.
@@ -169,6 +176,14 @@ def main() -> None:
         # "reward" is the final score in this game (normally the coins in the
         # bank), and "status" confirms whether the agent finished normally.
         print(f"Player {player}: reward={state.reward}, status={state.status}")
+
+    if args.replay_path is not None:
+        args.replay_path.parent.mkdir(parents=True, exist_ok=True)
+        args.replay_path.write_text(
+            json.dumps(env.toJSON(), indent=2) + "\n",
+            encoding="utf-8",
+        )
+        print(f"Replay: {args.replay_path}")
 
     if args.report_dir is not None:
         report = write_match_evidence(

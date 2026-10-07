@@ -11,8 +11,12 @@
 | ADR-005 | Merge game setup and match display | Superseded | 2026-10-06 |
 | ADR-006 | Name the merged surface Matchmaker | Accepted | 2026-10-06 |
 | ADR-007 | Store Matchmaker metadata in a local catalog | Accepted | 2026-10-06 |
-| ADR-007 | Make deterministic baseline challenges a separate surface | Accepted | 2026-10-06 |
-| ADR-008 | Preserve descriptive evidence beside each challenge match | Accepted | 2026-10-07 |
+| ADR-008 | Make deterministic baseline challenges a separate surface | Accepted | 2026-10-06 |
+| ADR-009 | Preserve descriptive evidence beside each challenge match | Accepted | 2026-10-07 |
+| ADR-010 | Execute planned matches through the isolated runner | Accepted | 2026-10-07 |
+| ADR-011 | Open replays in one reusable visualizer window | Accepted | 2026-10-06 |
+| ADR-012 | Use Fluent UI for the Agent Tuning Studio interface | Accepted | 2026-10-06 |
+| ADR-013 | Provide a shared Matchmaker server lifecycle command | Accepted | 2026-10-06 |
 
 ## ADR-001 — Make the Studio experiment-driven and keep the full-match viewer separate
 
@@ -188,7 +192,7 @@
   under `src/Matchmaker.Server/`.
 - Supersedes: None
 
-## ADR-007 — Make deterministic baseline challenges a separate surface
+## ADR-008 — Make deterministic baseline challenges a separate surface
 
 - Date: 2026-10-06
 - Status: Accepted
@@ -218,7 +222,7 @@
   [tuning-session runner](tools/beat_the_baseline/run_tuning_session.py).
 - Supersedes: None
 
-## ADR-008 — Preserve descriptive evidence beside each challenge match
+## ADR-009 — Preserve descriptive evidence beside each challenge match
 
 - Date: 2026-10-07
 - Status: Accepted
@@ -240,4 +244,106 @@
 - Evidence: [match evidence builder](../../tools/match_evidence.py),
   [local match runner](../../tools/run_match.py), and
   [Beat the Baseline comparison runner](tools/beat_the_baseline/run_baseline_comparison.py).
+- Supersedes: None
+
+## ADR-010 — Execute planned matches through the isolated runner
+
+- Date: 2026-10-07
+- Status: Accepted
+- Context: Matchmaker catalog CRUD could record controls but could not yet
+  execute an individual match or retain the resulting run artifact. The
+  repository already has an isolated fixed-seed runner that creates a unique
+  ignored directory and captures simulator evidence.
+- Decision: Matchmaker owns an explicit run operation for `planned` records.
+  The local server endpoint and catalog CLI mark the record `running`, invoke
+  `tools/run_isolated_match.py` without a shell, and persist `succeeded` or
+  `failed`, the unique artifact path, exit code, and error message. The
+  recorded seat determines which selected participant is passed as simulator
+  player 0; catalog agent/opponent roles remain unchanged.
+- Alternatives considered: Let CRUD creation implicitly run a match; invoke
+  the simulator directly from the browser; duplicate simulator logic in the
+  server; or silently treat a failed process as a successful record.
+- Consequences: A match now has an explicit lifecycle and retained evidence,
+  while replay indexing, display launch, and outcome interpretation remain
+  separate operations. The current run artifact contains the manifest,
+  status, evidence report, decision trace, and raw replay JSON. A server
+  restart during execution can leave a record marked `running`, which remains
+  a follow-up recovery concern.
+- Evidence: [isolated runner](tools/run_isolated_match.py), [Matchmaker
+  server](src/Matchmaker.Server/Program.cs), and [Matchmaker CLI](tools/matchmaker/catalog.py).
+- Supersedes: None
+
+## ADR-011 — Open replays in one reusable visualizer window
+
+- Date: 2026-10-06
+- Status: Accepted
+- Context: Matchmaker needs to open the replay for a selected match in the
+  separate full-match visualizer. The user wants one visualizer window reused
+  across matches, with a new window opened only when none exists.
+- Decision: Matchmaker opens a replay-specific URL using one stable named
+  browser target. The browser creates the target when absent and navigates the
+  existing target when present. Matchmaker starts the local visualizer host
+  when it is not already responding.
+- Alternatives considered: Open a new browser window for every replay; require
+  users to start the visualizer manually; display the full farm inside the
+  Matchmaker page.
+- Consequences: Replay selection stays in Matchmaker while the full visualizer
+  remains a separate window. The viewer must load a replay from a request-time
+  URL, and Matchmaker must detect or start the local viewer host. The runner
+  now retains raw replay JSON beside its descriptive evidence.
+- Evidence: User decision in this session, [isolated runner](tools/run_isolated_match.py),
+  and [local match runner](../../tools/run_match.py).
+- Supersedes: None
+
+## ADR-012 — Use Fluent UI for the Agent Tuning Studio interface
+
+- Date: 2026-10-06
+- Status: Accepted
+- Context: The active Matchmaker page was implemented with plain HTML
+  controls and custom JavaScript, while a Blazor client scaffold already
+  existed. The user wants a consistent Fluent UI system that is easier to
+  understand and maintain.
+- Decision: All Agent Tuning Studio controls and data-management surfaces use
+  Microsoft Fluent UI for Blazor. Keep layout and typography styles local
+  where useful, but use Fluent components for interactive controls, status
+  indicators, cards, progress, and messages. The separate full-match
+  visualizer remains its own specialized visualization surface.
+- Alternatives considered: Continue with hand-built HTML controls; mix Fluent
+  UI with native controls; replace the existing Studio client framework.
+- Consequences: Studio UI work belongs in the Blazor client and the server
+  hosts its built output. Shared Studio instructions and workspace agent
+  contracts carry this rule. The Matchmaker static HTML/JavaScript page is
+  being replaced by the Fluent UI client.
+- Evidence: User direction in this session and existing Fluent UI usage in
+  the [Decision Network Lab](../decision-network-lab/src/DecisionNetworkLab.Client/).
+- Supersedes: ADR-001's open choice about whether the Studio should adopt
+  the existing Blazor/Fluent UI implementation style.
+
+## ADR-013 — Provide a shared Matchmaker server lifecycle command
+
+- Date: 2026-10-06
+- Status: Accepted
+- Context: Agents and people need a dependable way to use the Matchmaker UI
+  and HTTP API without remembering a manual server launch sequence or
+  colliding with a server that is already running.
+- Decision: Provide repository-owned `server.py status`, `ensure`, and
+  `restart` actions. `ensure` checks the Matchmaker health endpoint first and
+  starts the local server in a detached background process only when needed.
+  `restart` stops only a process previously started and recorded by the helper,
+  then starts it again. Use port 5190 by default, bind to the host's active
+  private interface so the shared browser can reach it, verify readiness on
+  that same address, and retain process metadata and startup output under the ignored
+  run directory.
+- Alternatives considered: Ask each agent to launch `dotnet run` directly;
+  rely on a manually maintained server process; create a global machine
+  service.
+- Consequences: Studio agent instructions can point to one shared lifecycle
+  tool, and the server remains available after the agent command exits.
+  Externally launched processes are not terminated by the helper. Server
+  lifecycle remains local to the repository, while the visualizer host remains
+  a separate future integration. Binding the private interface allows browser
+  access from the local network, so this development server is not an
+  internet-facing deployment.
+- Evidence: [Matchmaker server helper](tools/matchmaker/server.py) and
+  [Matchmaker tool guide](tools/matchmaker/README.md).
 - Supersedes: None
