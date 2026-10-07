@@ -1,6 +1,7 @@
 # Agent Tuning Studio — Implementation Plan
 
-**Status:** planning; no Studio application code has been started.
+**Status:** planning; the first Matchmaker server, UI, and local catalog
+slice is implemented.
 
 This plan turns the product direction in the
 [Studio overview](README.md) into small, evidence-driven steps. It is a
@@ -65,6 +66,8 @@ Keep the coding-agent tool surface separated by responsibility:
 - **Matchmaker** selects agents, configures and runs local matches, stores and
   retrieves match records, locates replay artifacts, and opens the full-match
   visualizer in its own window.
+- **Beat the Baseline** runs a fixed, matched baseline-versus-candidate seed
+  suite and records aggregate deltas without editing source.
 - **Match Analyzer** retrieves completed evidence and compares controlled
   runs.
 
@@ -72,13 +75,21 @@ Provide the smallest useful operations needed to inspect agents and matches,
 run a local match, retrieve its evidence, and open its visualization. These
 must be real callable tools available to the coding agent, not merely buttons
 that perform a similar action only inside the UI. The first implementation
-only binds the isolated Matchmaker runner; display launching and analysis
-remain skeleton capabilities until their artifact handoffs are defined.
+now binds the isolated runner and local agent/match catalog CRUD. Display
+launching and analysis remain skeleton capabilities until their artifact
+handoffs are defined.
+
+The Beat the Baseline comparison runner now also retains descriptive
+per-match evidence and pre-action decision traces. It intentionally reports
+simulator evidence gaps rather than inferring realized sales or invalid
+actions.
 
 **Exit criteria**
 
 - The coding agent can discover and invoke the agreed local operations through
   its actual tool interface.
+- Agent and match metadata can be listed, retrieved, created, updated, and
+  removed without deleting source or artifacts.
 - A match run reports progress and errors explicitly and retains its
   reproducibility inputs and result artifacts.
 - A completed match can be opened in the separate full-match viewer.
@@ -170,9 +181,9 @@ After the local experiment and evidence workflow is useful, define a reviewed
 handoff for completed run evidence to a Microsoft Foundry agent. The Foundry
 agent may interpret results and help the user consider tuning options; it is
 not the live player and does not automatically modify policy or declare a
-candidate successful. Natural-language requests, use of the "Beat the
-baseline" skill, and suggested candidate selections are hypotheses for
-exploration, not committed interaction requirements.
+candidate successful. Natural-language requests and suggested candidate
+selections are hypotheses for exploration, not committed interaction
+requirements.
 
 This phase is blocked on an explicit architecture decision that identifies
 the provider, budget, approved data flow, and human approval boundary. Do not

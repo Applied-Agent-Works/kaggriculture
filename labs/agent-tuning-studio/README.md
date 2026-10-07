@@ -1,8 +1,8 @@
 # Kaggriculture Agent Tuning Studio
 
-**Status: direction and project home established; the first workspace-tool
-slice is now available, while the Studio UI and standalone service remain
-unimplemented.**
+**Status: direction and project home established; workspace tools and the
+first persisted tuning-session workflow are available, while the Studio UI
+and standalone service remain unimplemented.**
 
 The Agent Tuning Studio will provide a local interface for selecting
 Kaggriculture agents, inspecting and adjusting their explicit parameters,
@@ -20,9 +20,8 @@ with useful local operations available through real coding-agent tools.
 
 The longer-term direction is for this experience to work with a Microsoft
 Foundry agent that helps interpret simulation results and support agent tuning.
-Natural-language requests, the existing "Beat the baseline" skill, and
-suggested candidate selections are possibilities to explore later; they are
-not a defined interaction contract yet.
+Natural-language requests and suggested candidate selections are possibilities
+to explore later; they are not a defined interaction contract yet.
 
 ## Intended experiment loop
 
@@ -121,8 +120,13 @@ Example:
 ```
 
 This isolates concurrent output files and preserves basic provenance. It is
-not a sandbox for arbitrary Python agent code, and it does not yet provide
-catalog, parameter-editing, replay-launch, or UI capabilities.
+not a sandbox for arbitrary Python agent code.
+
+The Matchmaker catalog now provides local CRUD for agent and match metadata.
+The catalog is stored under the ignored `catalog/` directory and is also
+available through the local Matchmaker server. Record deletion never removes
+agent source or match artifacts; match records preserve controls and source
+revision but do not run the simulator.
 
 ## Separate development-agent surfaces
 
@@ -131,14 +135,25 @@ The Studio now reserves two separate development-agent surfaces:
 1. **Matchmaker** — select agents and opponents, configure and run matches,
    store/retrieve records, locate replay artifacts, and open the full-match
    visualizer in its own window.
-2. **Match Analyzer** — inspect completed evidence, compare controlled runs,
+2. **Beat the Baseline** — run deterministic baseline-versus-candidate
+   comparisons using matched controls and optional seat swaps.
+3. **Match Analyzer** — inspect completed evidence, compare controlled runs,
    and report behavior, economic, and calibration findings.
 
 Each surface has its own workspace agent under
 [`.github/agents/`](../../.github/agents/) and its own skeleton area under
 [`tools/`](tools/). They exchange identified artifacts rather than sharing
-mutable state. Only the Matchmaker runner is implemented so far; display
-launch and analysis remain explicit contracts for future binding.
+mutable state. The Matchmaker runner, local catalog CRUD, and Beat the
+Baseline comparison runner are implemented. Beat the Baseline also includes
+the first parameterized session runner for repeated carrot, wheat, and melon
+rounds; display launch and analysis remain explicit contracts for future
+binding.
+
+Beat the Baseline child runs also retain descriptive evidence under each
+match directory: action and decision counts, observed crop lifecycle events,
+requested market orders, and pre-action JSONL traces. The report explicitly
+marks realized sale values and invalid/no-op counts as unavailable until the
+simulator exposes an authoritative order/result audit.
 
 ## Incremental path
 
@@ -147,14 +162,14 @@ launch and analysis remain explicit contracts for future binding.
 2. Identify the local operations the coding agent needs and expose them as
    real tools, starting with the smallest useful set for inspecting agents and
    matches, running a match, and opening its visualization.
-3. Choose one controlled tuning experiment and define how its agent exposes
-   tunable parameters while preserving baseline values.
+3. Use the persisted Beat the Baseline session runner for one named parameter
+   and a fixed candidate sequence, then define how the UI should expose the
+   same experiment while preserving baseline values.
 4. Compare runs and evidence reproducibly, and connect results to the separate
    full-match visualizer.
 5. Define a reviewed evidence handoff to a Foundry advisory agent that can
    interpret runs and support tuning. Explore natural-language interaction,
-   "Beat the baseline," and suggested selections only after the run/evidence
-   workflow is useful.
+   and suggested selections only after the run/evidence workflow is useful.
 6. Add decision-graph inspection where it helps explain actual agent
    behavior.
 

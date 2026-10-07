@@ -86,6 +86,25 @@
 
 ## Answered questions
 
+### Q-013 — Should deterministic baseline challenges be a separate surface?
+
+- Asked: 2026-10-06
+- Question: Should the repeatable “Beat the baseline” workflow be part of
+  Matchmaker or exposed as a separate development-agent tool?
+- Answer: Keep it separate. Beat the Baseline owns matched baseline/candidate
+  runs, fixed seeds, optional seat swaps, and aggregate deltas. Matchmaker
+  owns individual match lifecycle operations; Match Analyzer interprets the
+  resulting evidence.
+- Evidence: [Beat the Baseline agent](../../.github/agents/kaggriculture-beat-the-baseline.agent.md),
+  [comparison tool](tools/beat_the_baseline/), and the existing
+  [carrot baseline policy](../../agents/carrot/conveyor.py).
+- Answered: 2026-10-06
+- Follow-up: The deterministic comparison has now been exercised. The first
+  persisted one-parameter tuning-session runner is available for carrot,
+  wheat, and melon; add richer lifecycle, decision-trace, and calibration
+  metrics after the session workflow is exercised with real hypotheses.
+- Status: Answered
+
 ### Q-012 — Should game setup and match display be one surface?
 
 - Asked: 2026-10-06

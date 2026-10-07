@@ -10,6 +10,9 @@
 | ADR-004 | Keep setup, display, and analysis as separate agent surfaces | Superseded | 2026-10-06 |
 | ADR-005 | Merge game setup and match display | Superseded | 2026-10-06 |
 | ADR-006 | Name the merged surface Matchmaker | Accepted | 2026-10-06 |
+| ADR-007 | Store Matchmaker metadata in a local catalog | Accepted | 2026-10-06 |
+| ADR-007 | Make deterministic baseline challenges a separate surface | Accepted | 2026-10-06 |
+| ADR-008 | Preserve descriptive evidence beside each challenge match | Accepted | 2026-10-07 |
 
 ## ADR-001 — Make the Studio experiment-driven and keep the full-match viewer separate
 
@@ -158,3 +161,83 @@
 - Evidence: [Matchmaker agent](../../.github/agents/kaggriculture-matchmaker.agent.md)
   and [Matchmaker tool skeleton](tools/matchmaker/).
 - Supersedes: ADR-005
+
+## ADR-007 — Store Matchmaker metadata in a local catalog
+
+- Date: 2026-10-06
+- Status: Accepted
+- Context: Matchmaker needs truthful agent and match records that both the
+  local UI and workspace agents can inspect and mutate. Run artifacts and
+  agent source must not be treated as disposable catalog rows.
+- Decision: Store agent and match metadata in ignored JSON catalog files under
+  `labs/agent-tuning-studio/catalog/`. Expose list, get, create, update, and
+  delete operations through the local Matchmaker server and the checked-in
+  `tools/matchmaker/catalog.py` CLI. Agent deletion removes only the catalog
+  record. Match deletion removes only the catalog record, never the referenced
+  source or artifact. Match records preserve seed, seat, step count, status,
+  artifact path, and source revision; creating a record does not run a match.
+- Alternatives considered: Parse source and run directories on every request;
+  let catalog deletion remove source or artifacts; make the UI the only
+  client of the catalog.
+- Consequences: The first CRUD surface is local, inspectable, and usable by
+  workspace agents without external services. Cross-process writes use atomic
+  replacement, while richer locking, replay indexing, and match execution
+  remain follow-up work.
+- Evidence: [Matchmaker catalog tool](tools/matchmaker/catalog.py),
+  [Matchmaker tool README](tools/matchmaker/README.md), and the local server
+  under `src/Matchmaker.Server/`.
+- Supersedes: None
+
+## ADR-007 — Make deterministic baseline challenges a separate surface
+
+- Date: 2026-10-06
+- Status: Accepted
+- Context: The earlier “Beat the baseline” idea appears in Studio planning,
+  but no implemented skill or contract was found. A repeatable comparison
+  needs stricter controls than an ordinary Matchmaker run and should not be
+  confused with evidence interpretation.
+- Decision: Add a separate Beat the Baseline workspace agent and tool. It
+  requires explicit seeds, runs baseline and candidate against the same
+  opponent under matched controls, optionally swaps seats, and records
+  manifests, per-match outputs, statuses, and aggregate reward deltas in a
+  unique challenge directory. It reports a lead, tie, or failure; Match
+  Analyzer remains responsible for interpretation and recommendations.
+- Alternatives considered: Add a natural-language skill with implicit
+  controls; fold the workflow into Matchmaker; let Match Analyzer launch
+  matches; declare a policy better from one result.
+- Consequences: Baseline comparisons are deterministic and easy to repeat.
+  The surface also provides an explicit tuning-session runner for the
+  documented iterative workflow: one named parameter, repeated matched
+  rounds, and persisted keep/review evidence. It does not edit policies,
+  game rules, or default parameter instances; generated wrappers are isolated
+  under ignored run directories. It does not explain causes, measure
+  calibration, or prove general superiority.
+- Evidence: [Beat the Baseline agent](../../.github/agents/kaggriculture-beat-the-baseline.agent.md),
+  [comparison tool](tools/beat_the_baseline/), the existing
+  [carrot conveyor baseline](../../agents/carrot/conveyor.py), and the
+  [tuning-session runner](tools/beat_the_baseline/run_tuning_session.py).
+- Supersedes: None
+
+## ADR-008 — Preserve descriptive evidence beside each challenge match
+
+- Date: 2026-10-07
+- Status: Accepted
+- Context: Reward deltas alone cannot distinguish an economic result from
+  changes in action behavior, crop lifecycle, or an unexamined confound.
+  The public simulator exposes observations and requested actions, but does
+  not provide an authoritative accepted-order audit for every market action.
+- Decision: Extend the local match runner with an optional evidence report
+  containing per-player action counts, plant/pass decisions, observed crop
+  lifecycle losses, active crops, requested market orders, quoted sale value,
+  and pre-action JSONL traces. Mark realized sale values and invalid/no-op
+  action counts unavailable instead of estimating them.
+- Alternatives considered: Keep reward-only summaries; infer accepted sales
+  and invalid actions from bank or market deltas; modify the live policy to
+  emit experiment data.
+- Consequences: Baseline challenges are more inspectable without changing
+  agent source or game-time behavior. The reports remain descriptive and
+  incomplete until the simulator exposes authoritative order-result data.
+- Evidence: [match evidence builder](../../tools/match_evidence.py),
+  [local match runner](../../tools/run_match.py), and
+  [Beat the Baseline comparison runner](tools/beat_the_baseline/run_baseline_comparison.py).
+- Supersedes: None
