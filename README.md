@@ -2,6 +2,28 @@
 
 A farming sim where two players compete to maximize their income from farming by selling to a dynamic market.
 
+## Project Map
+
+This repository brings together the Kaggriculture game, local agents, and
+tools for reproducible simulation and learning.
+
+- **Game and rules:** [`kaggriculture.py`](kaggriculture.py) implements the
+  game, and [`kaggriculture.json`](kaggriculture.json) contains its
+  configuration. This README remains the reference for game mechanics and
+  the agent interface.
+- **Agents and matches:** [`agents/`](agents/) contains the policies and
+  historical agents. Root [`main.py`](main.py) is the Kaggle submission
+  entry point; [`tools/run_match.py`](tools/run_match.py) runs local matches.
+- **Documentation:** [`docs/`](docs/) contains setup guides, architecture
+  documents, decision networks, learning notes, and historical handoffs.
+- **Interactive tools:** [`labs/agent-tuning-studio/`](labs/agent-tuning-studio/)
+  is the planned home for a simulation-driven tuning interface.
+  [`visualizers/`](tools/visualizers/) contains the separate game viewers.
+- **Experiments:** [`experiments/memoization/`](experiments/memoization/)
+  holds match-timing work, while
+  [`experiments/tuning-handoffs/`](experiments/tuning-handoffs/) preserves
+  source snapshots and handoff material.
+
 ## Overview
 
 Each player starts with an empty farm and a small amount of income (seed money, if you will). Each turn, they can perform actions such as moving around the board, purchasing seeds or livestock, planting seeds, watering plants, harvesting produce or animal products, and selling that produce at the market. The game runs for a fixed amount of time representing one season, and the winner is determined by who has the most money in the bank at the end.
@@ -373,4 +395,4 @@ Per-crop seed costs and per-product base prices are not configurable; they are d
 ## Getting Started
 
 For building, locally testing, and submitting an agent, see
-[GETTING_STARTED.md](GETTING_STARTED.md).
+[docs/GETTING_STARTED.md](docs/GETTING_STARTED.md).

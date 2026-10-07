@@ -12,17 +12,18 @@ Read these documents before changing architecture or decision logic:
 
 1. `README.md` — canonical Kaggriculture rules, action interface, and game
    configuration.
-2. `GETTING_STARTED.md` — building an agent, local testing, and Kaggle
+2. `docs/GETTING_STARTED.md` — building an agent, local testing, and Kaggle
    workflow.
-3. `kaggriculture-agent-architecture.md` — the agent's current and planned
+3. `docs/architecture/kaggriculture-agent-architecture.md` — the agent's current and planned
    architecture, decision networks, experiment method, and invariants.
-4. `carrot-decision-network.md` — the first concrete carrot influence diagram
+4. `docs/decision-networks/carrot-decision-network.md` — the first concrete carrot influence diagram
    and its current assumptions.
-5. `wheat-decision-network.md` and `melon-decision-network.md` — parallel
+5. `docs/decision-networks/wheat-decision-network.md` and
+    `docs/decision-networks/melon-decision-network.md` — parallel
    starter crop networks, intentionally excluding production chains.
-6. `foundry-refinement-architecture.md` — the separate Foundry-based offline
+6. `docs/architecture/foundry-refinement-architecture.md` — the separate Foundry-based offline
    refinement system and its boundaries.
-7. `TEMP_MEMORY.md` and `TEMP_HANDOFF.md` — temporary historical context;
+7. `docs/history/TEMP_MEMORY.md` and `docs/history/TEMP_HANDOFF.md` — temporary historical context;
    consult them when reconstructing decisions that are not yet reflected in
    the durable architecture documents.
 
@@ -43,7 +44,7 @@ The current implementation is deliberately narrow:
   market quote as a deterministic harvest-price estimate; calibrated
   probability tables have not been added.
 - Root `main.py` is the Kaggle submission entry point for the decision policy.
-- `run_match.py` runs local matches and accepts `--seed` for reproducibility.
+- `tools/run_match.py` runs local matches and accepts `--seed` for reproducibility.
 - `agents/archive/` retains historical implementations; do not delete them
   without explicit user approval.
 
