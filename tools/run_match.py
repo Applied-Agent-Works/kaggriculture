@@ -31,7 +31,57 @@ import argparse
 
 # kaggle_environments is the package that contains the local game simulator.
 # "make" creates one game environment for us to run.
+from pathlib import Path
+import tempfile
 from kaggle_environments import make
+from match_evidence import write_match_evidence
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+BUILTIN_AGENTS = {"pass", "random", "starter"}
+
+
+def _repository_file(value: str, label: str) -> str:
+    if value in BUILTIN_AGENTS:
+        return value
+    candidate = (REPO_ROOT / value).resolve()
+    try:
+        candidate.relative_to(REPO_ROOT)
+    except ValueError as error:
+        raise ValueError(f"{label} must be a path inside the repository") from error
+    if not candidate.is_file():
+        raise ValueError(f"{label} does not identify a repository file: {value}")
+    return candidate.relative_to(REPO_ROOT).as_posix()
+
+
+def _agent_reference(value: str, directory: Path, role: str) -> str:
+    if value in BUILTIN_AGENTS:
+        return value
+
+    module_name = value[:-3].replace("/", ".") if value.endswith(".py") else ""
+    wrapper = directory / f"{role}_entry.py"
+    if module_name and all(part.isidentifier() for part in module_name.split(".")):
+        source = (
+            "import sys\n"
+            f"sys.path.insert(0, {str(REPO_ROOT)!r})\n"
+            f"from {module_name} import agent\n"
+        )
+    else:
+        source = (
+            "import importlib.util\n"
+            "import sys\n"
+            f"sys.path.insert(0, {str(REPO_ROOT)!r})\n"
+            f"_spec = importlib.util.spec_from_file_location({role!r}, "
+            f"{str((REPO_ROOT / value).resolve())!r})\n"
+            "if _spec is None or _spec.loader is None:\n"
+            f"    raise ImportError('cannot load {role} from generated wrapper')\n"
+            f"_module = importlib.util.module_from_spec(_spec)\n"
+            "sys.modules[_spec.name] = _module\n"
+            "_spec.loader.exec_module(_module)\n"
+            "agent = _module.agent\n"
+        )
+    wrapper.write_text(source, encoding="utf-8")
+    return str(wrapper)
 
 
 def main() -> None:
@@ -74,10 +124,22 @@ def main() -> None:
         default=None,
         help="Optional deterministic episode seed for reproducible comparisons.",
     )
+    parser.add_argument(
+        "--report-dir",
+        type=Path,
+        default=None,
+        help="Optional directory for descriptive match evidence and decision traces.",
+    )
 
     # Turn the command-line text into Python values.  For example,
     # "--steps 720" becomes args.steps == 720.
     args = parser.parse_args()
+
+    try:
+        agent = _repository_file(args.agent, "agent")
+        opponent = _repository_file(args.opponent, "opponent")
+    except ValueError as error:
+        parser.error(str(error))
 
     # Build a new Kaggriculture game.  "debug=True" asks the simulator to
     # expose useful errors while developing instead of hiding them.
@@ -86,20 +148,40 @@ def main() -> None:
         configuration["seed"] = args.seed
     env = make("kaggriculture", configuration=configuration, debug=True)
 
-    # Run the game.  The list is in player order: the first agent is player 0
-    # and the second is player 1.  On each turn, the simulator calls each
-    # agent's agent(observation) function and applies the returned actions.
-    env.run([args.agent, args.opponent])
+    # Kaggle's local runner executes file arguments as source text, without a
+    # package context. Generated wrappers make repository-relative imports
+    # deterministic while keeping the live agent source untouched.
+    with tempfile.TemporaryDirectory(prefix="kaggriculture-match-") as directory:
+        wrapper_directory = Path(directory)
+        agent_reference = _agent_reference(agent, wrapper_directory, "agent")
+        opponent_reference = _agent_reference(opponent, wrapper_directory, "opponent")
+
+        # Run the game. The list is in player order: the first agent is player
+        # 0 and the second is player 1.
+        env.run([agent_reference, opponent_reference])
 
     # env.steps contains the complete turn-by-turn history.  The final entry
     # is the state after the last turn, so it holds the final result for both
     # players.
     seed_label = env.info.get("seed", "random")
-    print(f"Played {args.steps} turns (seed {seed_label}): {args.agent} vs {args.opponent}")
+    print(f"Played {args.steps} turns (seed {seed_label}): {agent} vs {opponent}")
     for player, state in enumerate(env.steps[-1]):
         # "reward" is the final score in this game (normally the coins in the
         # bank), and "status" confirms whether the agent finished normally.
         print(f"Player {player}: reward={state.reward}, status={state.status}")
+
+    if args.report_dir is not None:
+        report = write_match_evidence(
+            env.steps,
+            final_states=env.steps[-1],
+            report_directory=args.report_dir,
+            agent=args.agent,
+            opponent=args.opponent,
+            seed=args.seed,
+            requested_steps=args.steps,
+        )
+        print(f"Evidence report: {args.report_dir / 'report.json'}")
+        print(f"Evidence trace records: {sum(player['trace_records'] for player in report['players'].values())}")
 
 
 # Python sets __name__ to "__main__" only when this file is run directly.
