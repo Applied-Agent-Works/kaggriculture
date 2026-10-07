@@ -20,6 +20,7 @@ You own the evidence-analysis surface for the Agent Tuning Studio.
 ## Boundaries
 
 - Do not create, run, or display matches; use the Matchmaker surface.
+- Do not launch baseline challenges; use the Beat the Baseline surface.
 - Do not edit agent, game, or parameter source.
 - Do not call a candidate better from one match or one noisy metric.
 - Do not use external models, services, or credentials.

@@ -1,0 +1,65 @@
+@page "/"
+@inject HttpClient Http
+
+<PageTitle>Matchmaker</PageTitle>
+
+<h1>Matchmaker</h1>
+<p class="lead">Select agents, preserve match metadata, and hand completed evidence to the separate analyzer.</p>
+
+@if (catalog is null)
+{
+    <p>Loading Matchmaker...</p>
+}
+else
+{
+    <section class="card">
+        <h2>Agents</h2>
+        @if (catalog.Agents.Count == 0)
+        {
+            <p>No agents are registered.</p>
+        }
+        else
+        {
+            <ul>
+                @foreach (var agent in catalog.Agents)
+                {
+                    <li>
+                        <strong>@agent.Label</strong>
+                        <span class="muted">(@agent.Id)</span>
+                        <div>@agent.Description</div>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+
+    <section class="card">
+        <h2>Matches</h2>
+        @if (catalog.Matches.Count == 0)
+        {
+            <p>No match records are stored yet.</p>
+        }
+        else
+        {
+            <ul>
+                @foreach (var match in catalog.Matches)
+                {
+                    <li>
+                        <strong>@match.Id</strong>
+                        <span class="muted">@match.Agent vs @match.Opponent, seed @match.Seed</span>
+                        <div>Status: @match.Status</div>
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+}
+
+@code {
+    private MatchmakerCatalog? catalog;
+
+    protected override async Task OnInitializedAsync()
+    {
+        catalog = await Http.GetFromJsonAsync<MatchmakerCatalog>("api/matchmaker/catalog");
+    }
+}
