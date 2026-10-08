@@ -1,4 +1,4 @@
-# Lab Workspace Instructions
+#  Lab Workspace Instructions
 
 These instructions apply to every agent working anywhere under `labs/`.
 
